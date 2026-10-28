@@ -1,3 +1,4 @@
+# Projeto-Integrador-II
 # Conexo
 
 Aplicação de anotações feita com Django e SQLite. As páginas HTML existentes são servidas pelos templates do Django; contas, notas, post-its, eventos e preferências ficam no banco de dados.
@@ -34,7 +35,6 @@ Para executar os backups automáticos na frequência definida pelo usuário, age
 
 O comando ignora contas sem Drive conectado e preferências com backup automático desligado. Exportar baixa um JSON local; restaurar importa um JSON Conexo e substitui as notas e pastas atuais da conta. A restauração do Google Drive também substitui esses dados e pede confirmação na interface.
 
-O SQLite e o servidor `runserver` são adequados para desenvolvimento local. Antes de publicar, configure `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` e `DJANGO_DEBUG=0`, além de usar um servidor WSGI/ASGI de produção e um banco apropriado.# Projeto-Integrador-II
-# Projeto-Integrador-II
-# Projeto-Integrador-II
-# Projeto-Integrador-II
+O SQLite e o servidor `runserver` são adequados para desenvolvimento local. Antes de publicar, configure `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` e `DJANGO_DEBUG=0`, além de usar um servidor WSGI/ASGI de produção e um banco apropriado.
+
+
