@@ -473,6 +473,8 @@
     *{animation:none!important;transition-duration:.001s!important}
   }
 </style>
+{% include "includes/acessibilidade.html" %}
+{% include "includes/linguas.html" %}
 </head>
 <body>
   <div class="blob blob-1"></div>
@@ -1583,7 +1585,7 @@
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkEventNotifications()});
   window.addEventListener('resize',()=>{renderCalendar();renderDayList();renderUpcoming();});
 
-  /* ===== Suporte a retorno dos Post-its (?evento=ID) — abre o drawer do evento automaticamente ===== */
+  /* ===== Suporte a retorno dos Post-its — abre o drawer do evento automaticamente ===== */
   (function(){
     const params=new URLSearchParams(window.location.search);
     const evId=params.get('evento');

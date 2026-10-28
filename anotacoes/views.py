@@ -56,12 +56,16 @@ def notes_page(request):
             "e": note.content[:180],
             "p": note.content[:180],
             "tag": note.tag,
+            "created_at": note.created_at.isoformat(),
+            "updated_at": note.updated_at.isoformat(),
         })
+    preference, _ = UserPreference.objects.get_or_create(user=request.user)
     return render(request, "notas.html", {
         "notes_json": folders,
         "unfiled_notes": [_note_data(note) for note in notes.filter(folder="")],
         "total_notes": notes.count(),
         "folders": [_folder_data(folder) for folder in Folder.objects.filter(user=request.user)],
+        "preferences_json": preference.values,
     })
 
 
@@ -456,6 +460,7 @@ def categories_api(request):
 def category_detail_api(request, slug):
     category = get_object_or_404(CalendarCategory, user=request.user, slug=slug)
     with transaction.atomic():
+        # Os eventos guardam o slug como texto, então é limpada a referência antes de remover a categoria.
         reassigned = CalendarEvent.objects.filter(user=request.user, category=category.slug).update(category="")
         category.delete()
     return JsonResponse({"ok": True, "events_reassigned": reassigned, "fallback_category": ""})
@@ -621,6 +626,7 @@ def _restore_backup(user, data):
         created = {}
         pending = dict(normalized_folders)
         while pending:
+            # Cria pastas cujos pais já existem.
             ready = [slug for slug, item in pending.items() if not item["parent"] or item["parent"] in created]
             if not ready:
                 raise ValueError("O backup contém uma hierarquia de pastas circular.")

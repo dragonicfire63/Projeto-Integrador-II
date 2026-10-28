@@ -17,6 +17,7 @@
   .delete-confirm-actions button:focus-visible{outline:3px solid var(--ring,rgba(79,70,229,.22));outline-offset:2px}
   @media(max-width:480px){.delete-confirm-actions{flex-direction:column-reverse}.delete-confirm-actions button{width:100%}}
 </style>
+
 <div class="delete-confirm-overlay" id="delete-confirm-overlay" hidden>
   <section class="delete-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-confirm-heading" aria-describedby="delete-confirm-message">
     <h2 class="delete-confirm-heading" id="delete-confirm-heading">
@@ -32,6 +33,7 @@
     </div>
   </section>
 </div>
+
 <script>
   (function(){
     const overlay=document.getElementById('delete-confirm-overlay');

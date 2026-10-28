@@ -62,7 +62,7 @@
   .blob-2{width:360px;height:360px;background:var(--blob-2);bottom:-100px;left:-80px}
 
   /* ===== Topbar ===== */
-  .topbar{max-width:880px;margin:0 auto;padding:20px 24px 0;width:100%;
+  .topbar{max-width:1080px;margin:0 auto;padding:20px 24px 0;width:100%;
     display:flex;align-items:center;justify-content:space-between;gap:12px}
   .topbar-left{display:flex;align-items:center;gap:12px}
   .icon-btn{width:42px;height:42px;border-radius:50%;cursor:pointer;flex-shrink:0;
@@ -256,6 +256,8 @@
     .row .switch,.row select,.row .btn-sm{align-self:flex-end}
   }
 </style>
+{% include "includes/acessibilidade.html" %}
+{% include "includes/linguas.html" %}
 </head>
 <body>
   <div class="blob blob-1"></div>
@@ -267,19 +269,19 @@
       <button class="icon-btn" type="button" data-app-back data-fallback="notas.html" aria-label="Voltar à página anterior" title="Voltar">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
-      <span class="wordmark" aria-label="Conexo">cone<svg class="xmark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <a class="wordmark" href="notas.html" aria-label="Conexo">cone<svg class="xmark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <circle cx="50" cy="50" r="16.5" fill="none" stroke="url(#gxTop)" stroke-width="3" stroke-dasharray="3 5" stroke-linecap="round" opacity=".55"/>
         <g stroke="url(#gxTop)" stroke-width="5.5" stroke-linecap="round"><path d="M50 50L69 31M50 50L31 31M50 50L31 69M50 50L69 69"/></g>
         <g fill="url(#gxTop)"><circle cx="70" cy="30" r="8"/><circle cx="30" cy="30" r="8"/><circle cx="30" cy="70" r="8"/><circle cx="70" cy="70" r="8"/></g>
         <g fill="url(#gxTop)" opacity=".8"><circle cx="84" cy="38" r="4.5"/><circle cx="62" cy="16" r="4.5"/><circle cx="16" cy="38" r="4.5"/><circle cx="38" cy="16" r="4.5"/><circle cx="16" cy="62" r="4.5"/><circle cx="38" cy="84" r="4.5"/><circle cx="84" cy="62" r="4.5"/><circle cx="62" cy="84" r="4.5"/></g>
         <circle cx="50" cy="50" r="10.5" fill="url(#gxTop)"/>
         <defs><linearGradient id="gxTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="gx-a"/><stop offset="1" class="gx-b"/></linearGradient></defs>
-      </svg>o</span>
+      </svg>o</a>
     </div>
     {% include "controle_sessao.html" %}
     <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema" title="Modo claro/escuro">
       <svg class="icon-moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <svg class="icon-sun" style="display:none" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <svg class="icon-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l-1.42-1.42M18.36 5.64l-1.42-1.42"/></svg>
     </button>
   </header>
 
@@ -452,9 +454,9 @@
           <div><b>Ordenar notas por</b><small>Ordem padrão na listagem</small></div>
         </div>
         <select id="s-ordem" aria-label="Ordenar notas por">
-          <option selected>Mais recentes</option>
-          <option>Últimas editadas</option>
-          <option>Título (A–Z)</option>
+          <option value="recent">Mais recentes</option>
+          <option value="edited">Últimas editadas</option>
+          <option value="title">Título (A–Z)</option>
         </select>
       </div>
       <div class="row">
@@ -463,8 +465,8 @@
           <div><b>Visualização padrão</b><small>Como as notas são exibidas</small></div>
         </div>
         <select id="s-visao" aria-label="Visualização padrão">
-          <option selected>Grade</option>
-          <option>Lista</option>
+          <option value="grid">Grade</option>
+          <option value="list">Lista</option>
         </select>
       </div>
     </section>
@@ -605,7 +607,6 @@
         <select id="s-lang" aria-label="Idioma">
           <option value="pt" selected>Português (Brasil)</option>
           <option value="en">English</option>
-          <option value="es">Español</option>
         </select>
       </div>
     </section>
@@ -939,9 +940,23 @@
   $('t-agenda').addEventListener('change',e=>{prefs.agenda=e.target.checked;savePrefs()});
   $('t-email').addEventListener('change',e=>{prefs.email=e.target.checked;savePrefs()});
   $('t-2fa').addEventListener('change',e=>{prefs.twofa=e.target.checked;savePrefs();showToast('Verificação em duas etapas '+(e.target.checked?'ativada':'desativada'))});
-  $('s-lang').addEventListener('change',e=>{prefs.lang=e.target.value;savePrefs();showToast('Idioma alterado (demonstração)')});
-  $('s-ordem').addEventListener('change',()=>showToast('Preferência salva'));
-  $('s-visao').addEventListener('change',()=>showToast('Preferência salva'));
+  $('s-lang').addEventListener('change',async e=>{
+    prefs.lang=e.target.value==='en'?'en':'pt';
+    const response=await savePrefs();
+    if(!response.ok){showToast('Não foi possível salvar o idioma.');return}
+    window.setAppLanguage(prefs.lang);
+    showToast(prefs.lang==='en'?'Language saved.':'Idioma salvo.');
+  });
+  $('s-ordem').addEventListener('change',async event=>{
+    prefs.noteOrder=event.target.value;
+    const response=await savePrefs();
+    showToast(response.ok?'Ordem de notas salva.':'Não foi possível salvar a ordem.');
+  });
+  $('s-visao').addEventListener('change',async event=>{
+    prefs.noteView=event.target.value;
+    const response=await savePrefs();
+    showToast(response.ok?'Visualização salva.':'Não foi possível salvar a visualização.');
+  });
 
   /* ===== Navegação do app: itens futuros disparam toast em vez de quebrar ===== */
   document.querySelectorAll('.nav-item[data-future]').forEach(item=>{
@@ -955,7 +970,9 @@
   ['autoBackup:t-autobackup','agenda:t-agenda','email:t-email','twofa:t-2fa'].forEach(par=>{
     const[k,id]=par.split(':'); $(id).checked=!!prefs[k];
   });
-  $('s-freq').value=prefs.freq; $('s-lang').value=prefs.lang; $('r-font').value=prefs.font;
+  $('s-freq').value=prefs.freq; $('s-lang').value=prefs.lang==='en'?'en':'pt'; $('r-font').value=prefs.font;
+  $('s-ordem').value=['recent','edited','title'].includes(prefs.noteOrder)?prefs.noteOrder:'recent';
+  $('s-visao').value=['grid','list'].includes(prefs.noteView)?prefs.noteView:'grid';
   if($('last-backup').dataset.value)showBackupTime($('last-backup').dataset.value);
   loadDriveStatus();
   if(new URLSearchParams(location.search).get('google')==='connected')showToast('Google Drive conectado.');

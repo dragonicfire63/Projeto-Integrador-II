@@ -13,7 +13,7 @@
       if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))
         document.documentElement.setAttribute('data-theme','dark');
     }catch(e){}
-    // Suporte a retorno do calendário: ?evento=<id>
+    // Suporte a retorno do calendário: evento=<id>
     // Será tratado depois que a página renderizar
   })();
 </script>
@@ -330,6 +330,8 @@
     *{animation:none!important;transition-duration:.001s!important}
   }
 </style>
+{% include "includes/acessibilidade.html" %}
+{% include "includes/linguas.html" %}
 </head>
 <body>
   <div class="blob blob-1"></div>
@@ -580,7 +582,7 @@
 
   /* ===== Eventos mockados (somente leitura — referência para voltar ao calendário) =====
      Mantemos uma cópia local apenas para resolver o título ao exibir o chip "Evento X" no post-it.
-     Não usamos para criar/editar — o calendário.html é a fonte canônica dos eventos. */
+     Não usamos para criar/editar — o calendário.html é a fonte dos eventos. */
   let EVENTS_REF=[];
   function findEventById(id){return EVENTS_REF.find(e=>String(e.id)===String(id))}
 
@@ -1049,7 +1051,7 @@
     if(e.key==='n'||e.key==='N'){e.preventDefault();openPostitModal();}
   });
 
-  /* ===== Suporte a retorno do evento (?evento=ID) =====
+  /* ===== Suporte a retorno do evento =====
      Vem do calendário → mostra banner "Voltar ao evento X" no topo do mural.
      O usuário clica e retorna ao calendário (que reabrirá o drawer do evento).
   */

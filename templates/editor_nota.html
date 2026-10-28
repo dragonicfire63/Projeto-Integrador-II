@@ -363,6 +363,8 @@
     *{animation:none!important;transition-duration:.001s!important}
   }
 </style>
+{% include "includes/acessibilidade.html" %}
+{% include "includes/linguas.html" %}
 </head>
 <body>
   <div class="blob blob-1"></div>
@@ -981,7 +983,7 @@
   colorMenu.querySelectorAll('.color-cell').forEach(cell=>{
     cell.addEventListener('click',()=>{
       const c=cell.dataset.color;
-      // Aplica cor de texto na seleção; se nada selecionado, define cor do cursor
+      // Aplica cor de texto na seleção.
       editor.focus();
       try{ document.execCommand('foreColor',false,c); }catch(e){}
       colorBar.style.background=c;

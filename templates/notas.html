@@ -160,6 +160,16 @@
   .tag-result-tag{font-size:.72rem;font-weight:700;color:var(--danger);background:var(--danger-soft);
     padding:4px 8px;border-radius:999px;white-space:nowrap}
   .tag-result-folder{font-size:.78rem;color:var(--muted);white-space:nowrap}
+  .notes-view-list{display:flex;flex-direction:column;gap:10px}
+  .notes-view-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .note-entry{min-width:0;background:var(--kicker-bg);border:1px solid var(--border);border-radius:12px;
+    padding:13px 15px;cursor:pointer;transition:border-color .18s,background .18s;display:flex;align-items:center;gap:12px}
+  .note-entry:hover{border-color:var(--primary)}
+  .notes-view-grid .note-entry{height:100%;align-items:flex-start;flex-direction:column}
+  .note-entry-text{flex:1;min-width:0}
+  .note-entry-title{font-weight:600;font-size:.92rem;margin-bottom:3px;overflow-wrap:anywhere}
+  .note-entry-preview{color:var(--muted);font-size:.82rem;line-height:1.45;overflow-wrap:anywhere}
+  @media(max-width:560px){.notes-view-grid{grid-template-columns:1fr}}
   .folder-card{position:relative;background:var(--surface);border:1.5px solid var(--border);
     border-radius:20px;padding:22px 18px;cursor:pointer;text-align:left;font:inherit;color:var(--ink);
     display:flex;flex-direction:column;align-items:flex-start;gap:12px;
@@ -284,6 +294,8 @@
     *{animation:none!important;transition-duration:.001s!important}
   }
 </style>
+{% include "includes/acessibilidade.html" %}
+{% include "includes/linguas.html" %}
 </head>
 <body>
   <div class="blob blob-1"></div>
@@ -512,7 +524,7 @@
         <h2>Notas sem pasta</h2>
         <small id="unfiled-count"></small>
       </div>
-      <div id="unfiled-list" style="display:grid;gap:10px"></div>
+      <div id="unfiled-list" class="notes-view-list"></div>
     </section>
   </main>
 
@@ -580,7 +592,7 @@
       <p class="modal-sub" id="folder-modal-sub"></p>
       <div class="folders-head"><h3 style="font-size:.9rem">Subpastas</h3><button class="btn btn-outline" id="create-subfolder-button" type="button">Criar subpasta</button></div>
       <div class="subfolder-list" id="folder-modal-children"></div>
-      <div id="folder-modal-notes" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div id="folder-modal-notes" class="notes-view-list"></div>
       <button class="btn btn-outline btn-block" id="edit-folder-button" style="margin-top:12px" type="button">Editar pasta</button>
       <button class="btn btn-danger btn-block" id="delete-folder-button" style="margin-top:12px">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m2 0-.8 14H6.8L6 6m4 4v6m4-6v6"/></svg>
@@ -633,12 +645,29 @@
 {{ notes_json|json_script:"notes-data" }}
 {{ folders|json_script:"folders-data" }}
 {{ unfiled_notes|json_script:"unfiled-notes-data" }}
+{{ preferences_json|json_script:"preferences-data" }}
 <script>
   const root=document.documentElement;
   const $=id=>document.getElementById(id);
   const NOTES_BY_FOLDER=JSON.parse($('notes-data').textContent);
   const FOLDERS=JSON.parse($('folders-data').textContent);
   const UNFILED_NOTES=JSON.parse($('unfiled-notes-data').textContent);
+  const PREFERENCES=JSON.parse($('preferences-data').textContent);
+  const NOTE_ORDER=['recent','edited','title'].includes(PREFERENCES.noteOrder)?PREFERENCES.noteOrder:'recent';
+  const NOTE_VIEW=PREFERENCES.noteView==='list'?'list':'grid';
+  function sortNotes(notes,tagQuery=''){
+    return notes.sort((first,second)=>{
+      const firstTag=normalize(first.tag||'');
+      const secondTag=normalize(second.tag||'');
+      const matchDifference=Number(secondTag.includes(tagQuery))-Number(firstTag.includes(tagQuery));
+      if(tagQuery&&matchDifference)return matchDifference;
+      const firstTitle=first.t||first.title||'';
+      const secondTitle=second.t||second.title||'';
+      if(NOTE_ORDER==='title')return firstTitle.localeCompare(secondTitle,'pt-BR',{sensitivity:'base'});
+      const dateField=NOTE_ORDER==='edited'?'updated_at':'created_at';
+      return new Date(second[dateField]||0)-new Date(first[dateField]||0);
+    });
+  }
   const TOTAL_NOTAS={{ total_notes }};
   let selectedFolderForNote=null;
 
@@ -817,22 +846,21 @@
 
     const list=$('folder-modal-notes');
     list.innerHTML='';
+    list.className=NOTE_VIEW==='grid'?'notes-view-grid':'notes-view-list';
     const notes=[...(NOTES_BY_FOLDER[name]||[])];
     const query=normalize(searchInput.value);
-    notes.sort((first,second)=>Number(normalize(second.tag||'').includes(query))-Number(normalize(first.tag||'').includes(query)));
+    sortNotes(notes,query);
     if(notes.length===0)notes.push({t:'(Sem notas ainda)',e:'Use o botão abaixo para adicionar.'});
     notes.forEach(n=>{
       const item=document.createElement('div');
-      item.style.cssText='background:var(--kicker-bg);border:1px solid var(--border);border-radius:12px;padding:13px 15px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px';
-      item.onmouseenter=()=>{item.style.borderColor='var(--primary)'};
-      item.onmouseleave=()=>{item.style.borderColor='var(--border)'};
+      item.className='note-entry';
       const text=document.createElement('div');
-      text.style.flex='1';
+      text.className='note-entry-text';
       const title=document.createElement('div');
-      title.style.cssText='font-weight:600;font-size:.92rem;margin-bottom:3px';
+      title.className='note-entry-title';
       title.textContent=n.t;
       const preview=document.createElement('div');
-      preview.style.cssText='color:var(--muted);font-size:.82rem;line-height:1.45';
+      preview.className='note-entry-preview';
       preview.textContent=n.e;
       text.append(title,preview);
       if(n.tag){
@@ -909,10 +937,10 @@
     $('unfiled-section').style.display='block';
     $('unfiled-count').textContent=`${UNFILED_NOTES.length} ${UNFILED_NOTES.length===1?'nota':'notas'}`;
     const list=$('unfiled-list');
-    UNFILED_NOTES.forEach(note=>{
+    list.className=NOTE_VIEW==='grid'?'notes-view-grid':'notes-view-list';
+    sortNotes([...UNFILED_NOTES]).forEach(note=>{
       const item=document.createElement('div');
-      item.className='folder-card';
-      item.style.cssText='width:100%;min-height:0;display:flex;flex-direction:row;align-items:center;gap:14px;padding:14px 18px';
+      item.className='note-entry unfiled-note-entry';
       item.style.setProperty('--c1','#0EA5E9');
       item.style.setProperty('--c2','#06B6D4');
       item.innerHTML='<button type="button" class="unfiled-note-open" style="display:flex;align-items:center;gap:14px;flex:1;text-align:left;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer"><span class="folder-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span class="folder-body" style="text-align:left"><span class="folder-name"></span><span class="folder-meta"></span></span></button>';

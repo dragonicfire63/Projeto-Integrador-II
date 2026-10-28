@@ -35,6 +35,7 @@ TEMPLATES = [{
         "django.template.context_processors.request",
         "django.contrib.auth.context_processors.auth",
         "django.contrib.messages.context_processors.messages",
+        "anotacoes.context_processors.accent_preference",
     ]},
 }]
 WSGI_APPLICATION = "conexo.wsgi.application"

@@ -564,6 +564,77 @@ class BackendFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["notes_json"][self.folder.slug][0]["tag"], "FOTOSSINTESE")
 
+    def test_note_display_preferences_are_saved_and_sent_to_notes_page(self):
+        self.client.force_login(self.user)
+        note = Note.objects.create(user=self.user, folder=self.folder.slug, title="Resumo")
+        response = self.client.patch("/api/preferences/", data=json.dumps({
+            "noteOrder": "title", "noteView": "list",
+        }), content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["preferences"]["noteOrder"], "title")
+        self.assertEqual(response.json()["preferences"]["noteView"], "list")
+
+        page = self.client.get("/notas.html")
+        self.assertEqual(page.status_code, 200)
+        self.assertEqual(page.context["preferences_json"]["noteOrder"], "title")
+        self.assertEqual(page.context["preferences_json"]["noteView"], "list")
+        note_data = page.context["notes_json"][self.folder.slug][0]
+        self.assertEqual(note_data["created_at"], note.created_at.isoformat())
+        self.assertEqual(note_data["updated_at"], note.updated_at.isoformat())
+
+    def test_saved_accent_is_available_on_all_main_pages(self):
+        self.client.force_login(self.user)
+        UserPreference.objects.create(user=self.user, values={
+            "accent": "verde", "font": 2, "contrast": True, "motion": True, "lang": "en",
+        })
+        for path in (
+            "/", "/notas.html", "/editor_nota.html", "/postits.html",
+            "/calendario.html", "/configuracoes.html",
+        ):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'id="accent-preference-data"')
+                self.assertContains(response, '"accent": "verde"')
+                self.assertContains(response, 'id="language-preference-data"')
+                self.assertEqual(response.context["language_preference"]["lang"], "en")
+                self.assertContains(response, 'id="accessibility-preference-data"')
+                self.assertEqual(response.context["accessibility_preference"], {
+                    "font": 2, "contrast": True, "motion": True,
+                })
+
+    def test_language_selector_only_offers_portuguese_and_english(self):
+        self.client.force_login(self.user)
+        response = self.client.get("/configuracoes.html")
+        self.assertContains(response, '<option value="pt" selected>Português (Brasil)</option>')
+        self.assertContains(response, '<option value="en">English</option>')
+        self.assertNotContains(response, "Español")
+
+    def test_account_language_preference_is_marked_authenticated_for_all_pages(self):
+        self.client.force_login(self.user)
+        UserPreference.objects.create(user=self.user, values={"lang": "en"})
+        for path in (
+            "/notas.html", "/editor_nota.html", "/postits.html",
+            "/calendario.html", "/configuracoes.html",
+        ):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.context["language_preference"]["authenticated"])
+                self.assertEqual(response.context["language_preference"]["lang"], "en")
+
+    def test_all_main_pages_render_shared_preference_includes(self):
+        self.client.force_login(self.user)
+        for path in (
+            "/notas.html", "/editor_nota.html", "/postits.html",
+            "/calendario.html", "/configuracoes.html",
+        ):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'id="accent-preference-data"')
+                self.assertContains(response, 'id="language-preference-data"')
+
     def test_folder_names_are_unique_per_user_and_not_shared(self):
         self.client.force_login(self.user)
         create_url = "/api/folders/"
