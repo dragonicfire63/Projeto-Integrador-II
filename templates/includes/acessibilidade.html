@@ -1,0 +1,47 @@
+{{ accent_preference|json_script:"accent-preference-data" }}
+{{ accessibility_preference|json_script:"accessibility-preference-data" }}
+<style>
+  a.wordmark{text-decoration:none}
+  [data-contrast="high"]{--muted:#3F3D63;--border:#77748F}
+  [data-theme="dark"][data-contrast="high"]{--muted:#E2E1F2;--border:#AAA8C4}
+  [data-motion="off"] *,[data-motion="off"] *::before,[data-motion="off"] *::after{
+    animation:none!important;transition:none!important;scroll-behavior:auto!important
+  }
+</style>
+<script>
+  (function(){
+    const root=document.documentElement;
+    const accents={
+      indigo:{a:'#4F46E5',b:'#7C3AED',da:'#818CF8',db:'#A78BFA'},
+      violeta:{a:'#7C3AED',b:'#A855F7',da:'#A78BFA',db:'#C084FC'},
+      verde:{a:'#059669',b:'#10B981',da:'#34D399',db:'#6EE7B7'},
+      rosa:{a:'#DB2777',b:'#EC4899',da:'#F472B6',db:'#F9A8D4'},
+      ambar:{a:'#D97706',b:'#F59E0B',da:'#FBBF24',db:'#FCD34D'}
+    };
+    const preference=JSON.parse(document.getElementById('accent-preference-data').textContent);
+    const accessibility=JSON.parse(document.getElementById('accessibility-preference-data').textContent);
+    const accent=accents[preference.accent]||accents.indigo;
+    const rgba=(hex,alpha)=>{
+      const value=parseInt(hex.slice(1),16);
+      return `rgba(${value>>16&255},${value>>8&255},${value&255},${alpha})`;
+    };
+    const applyAccent=()=>{
+      const dark=root.getAttribute('data-theme')==='dark';
+      const primary=dark?accent.da:accent.a;
+      const secondary=dark?accent.db:accent.b;
+      root.style.setProperty('--primary',primary);
+      root.style.setProperty('--primary-2',secondary);
+      root.style.setProperty('--link',primary);
+      root.style.setProperty('--ring',rgba(primary,dark?.3:.12));
+      root.style.setProperty('--kicker-bg',rgba(primary,dark?.2:.1));
+      document.querySelectorAll('.gx-a').forEach(element=>element.style.stopColor=primary);
+      document.querySelectorAll('.gx-b').forEach(element=>element.style.stopColor=secondary);
+    };
+    // Aplica as escolhas salvas antes da interação para manter aparência e acessibilidade entre páginas.
+    root.style.fontSize=['15px','16px','18px'][accessibility.font]||'16px';
+    if(accessibility.contrast)root.setAttribute('data-contrast','high');
+    if(accessibility.motion)root.setAttribute('data-motion','off');
+    applyAccent();
+    new MutationObserver(applyAccent).observe(root,{attributes:true,attributeFilter:['data-theme']});
+  })();
+</script>

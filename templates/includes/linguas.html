@@ -1,0 +1,377 @@
+{{ language_preference|json_script:"language-preference-data" }}
+<script>
+  (function(){
+    const translations={
+      'Ajuda':'Help','NOTAS':'NOTES','CALENDARIO':'CALENDAR','CONTA':'ACCOUNT','POST iT':'STICKY NOTES',
+      'Voltar':'Back','Voltar à página anterior':'Go back','Alternar tema':'Toggle theme','Modo claro/escuro':'Light/dark mode',
+      'Alternar entre modo claro e escuro':'Toggle light and dark mode',
+      'Você no centro de tudo o que importa.':'You at the center of everything that matters.',
+      'Bem-vindo(a)!':'Welcome!','👋 Bem-vindo(a)!':'👋 Welcome!','Organize cada área da sua vida':'Organize every part of your life',
+      'Ilustração de uma rede de conexões: você no centro e áreas da vida ao redor':'Illustration of connected parts of life, with you at the center',
+      'Ao continuar, você concorda com os':'By continuing, you agree to the',
+      'Crie notas, organize com tags e pastas, planeje pela agenda e conte com backup automático. No Conexo, você está no centro — e tudo se conecta ao seu redor.':'Create notes, organize them with tags and folders, plan with your calendar, and rely on automatic backups. With Conexo, you are at the center, with everything connected around you.',
+      'Notas':'Notes','Agenda':'Calendar','Tags':'Tags','Pastas':'Folders','Backup':'Backup','Trabalho':'Work','Estudos':'Studies','Saúde':'Health','Casa':'Home','Lazer':'Leisure',
+      'Entrar':'Sign in','Criar conta':'Create account','Termos de Uso':'Terms of Use','Que bom te ver de novo! 👋':'It is good to see you again! 👋',
+      'E-mail':'Email','Senha':'Password','Sua senha':'Your password','Não tem uma conta?':'Don\'t have an account?','Vamos começar sua jornada! 🚀':'Let\'s get started! 🚀',
+      'Nome':'Name','Seu nome':'Your name','Crie uma senha':'Create a password','Já tem uma conta?':'Already have an account?',
+      'Notas — ':'Notes — ','Editar nota':'Edit note','Nova nota':'New note','Voltar às notas':'Back to notes','Formatação':'Formatting',
+      'Ferramentas de formatação':'Formatting tools','Diminuir fonte':'Decrease font size','Aumentar fonte':'Increase font size',
+      'Negrito':'Bold','Itálico':'Italic','Sublinhado':'Underline','Cor do texto':'Text color','Preto':'Black','Vermelho':'Red','Âmbar':'Amber','Esmeralda':'Emerald','Azul':'Blue','Violeta':'Violet','Rosa':'Pink','Ciano':'Cyan','Lima':'Lime','Cinza':'Gray','Branco':'White','Lilás':'Lilac',
+      'Desfazer':'Undo','Refazer':'Redo','EDITANDO':'EDITING','NOVA NOTA':'NEW NOTE','Título da nota...':'Note title...','Título da nota':'Note title',
+      'PASTA':'FOLDER','Sem pasta':'No folder','Mover nota para uma pasta':'Move note to a folder','Tag...':'Tag...','Tag da nota':'Note tag',
+      'Comece a digitar sua nota...':'Start typing your note...','Salvo automaticamente · há 2 min':'Saved automatically · 2 min ago',
+      '0 palavras':'0 words','Ainda não salva':'Not saved yet','Post-its vinculados':'Linked sticky notes','Criar post-it vinculado':'Create linked sticky note',
+      'Título do post-it':'Sticky note title','Escreva uma anotação...':'Write a note...','Texto do post-it':'Sticky note text','Cancelar':'Cancel','Criar':'Create','Salvar':'Save',
+      'Calendário':'Calendar','Post-it':'Sticky note','Nenhum post-it vinculado a esta nota.':'No sticky notes linked to this note.',
+      'Voltar às notas?':'Back to notes?','Suas alterações foram salvas automaticamente. Deseja realmente voltar para a lista de notas?':'Your changes were saved automatically. Do you really want to return to the notes list?',
+      'Continuar editando':'Continue editing','Notas':'Notes','Editar post-it':'Edit sticky note','Excluir post-it':'Delete sticky note',
+      'Buscar por tag...':'Search by tag...','Buscar por tag':'Search by tag','Buscar':'Search','Adicionar nova nota/pasta':'Add a new note or folder','Adicionar':'Add',
+      'Notas com esta tag':'Notes with this tag','Minhas pastas':'My folders','Criar pasta':'Create folder','Filtrando':'Filtering',
+      'Notas sem pasta':'Unfiled notes','Nova pasta':'New folder','Escolha uma das suas pastas ou crie uma nova.':'Choose one of your folders or create a new one.',
+      'Adicionar nota a esta pasta':'Add note to this folder','Subpastas':'Subfolders','Criar subpasta':'Create subfolder','Editar pasta':'Edit folder','Excluir pasta':'Delete folder',
+      'Título':'Title','Pasta (opcional)':'Folder (optional)','Tag':'Tag','Conteúdo':'Content','Cor da pasta':'Folder color','Ex.: Aula sobre mitose':'e.g. Class about mitosis',
+      'Tag da nota':'Note tag','Escreva aqui suas anotações...':'Write your notes here...','Índigo':'Indigo','Ciano':'Cyan','Esmeralda':'Emerald','Rosa':'Pink','Azul':'Blue',
+      'Nenhuma subpasta':'No subfolders','Você ainda não tem pastas':'You do not have any folders yet','Crie sua primeira pasta para organizar suas notas.':'Create your first folder to organize your notes.',
+      'Opcional':'Optional','Ex.: Projetos pessoais':'e.g. Personal projects','Pasta superior':'Parent folder','Nenhuma (pasta principal)':'None (top-level folder)',
+      'Salvar pasta':'Save folder','Salvar nota':'Save note','Excluir':'Delete','Esta ação não pode ser desfeita.':'This action cannot be undone.',
+      'Organize suas notas em pastas e encontre tudo em segundos.':'Organize your notes into folders and find anything in seconds.',
+      'Cadastre eventos, vincule notas e nunca mais perca um compromisso.':'Create events, link notes, and never miss an appointment again.',
+      'Recados rápidos que conectam suas notas e eventos.':'Quick reminders that connect your notes and events.',
+      'Buscar nos post-its...':'Search sticky notes...','Voltar ao evento no calendário':'Back to calendar event','Mural de post-its':'Sticky notes board',
+      'Criar novo post-it':'Create a sticky note','Novo post-it':'New sticky note','Anote um lembrete e vincule notas/pastas para acesso rápido.':'Write a reminder and link notes or folders for quick access.',
+      'Ex.: Lembrar de revisar mitose':'e.g. Remember to review mitosis','Escreva aqui o recado...':'Write your reminder here...',
+      'Vínculos':'Links','(notas e pastas — selecione vários)':'(notes and folders — select multiple)','Notas › Escolher pasta ou nota':'Notes › Choose a folder or note',
+      'Cor do post-it':'Sticky note color','Amarelo padrão — sem pasta vinculada':'Default yellow — no linked folder','Abrir nota':'Open note',
+      'Central de ajuda (demonstração)':'Help center (demo)','Sem conteúdo de prévia disponível':'No preview content available','Nenhum vínculo. O post-it ficará amarelo padrão.':'No links. The sticky note will use the default yellow color.',
+      'Crie uma pasta na tela de Notas para vincular uma pasta ou nota.':'Create a folder on the Notes page to link a folder or note.',
+      'OU ENTRE EM UMA PASTA PARA VINCULAR NOTAS ESPECÍFICAS:':'OR OPEN A FOLDER TO LINK SPECIFIC NOTES:',
+      'Calendário':'Calendar','Conta':'Account','Organização das notas':'Notes organization','Padrões de exibição para suas notas, tags e pastas.':'Display defaults for your notes, tags, and folders.',
+      'Ordenar notas por':'Sort notes by','Ordem padrão na listagem':'Default order in lists','Mais recentes':'Newest','Últimas editadas':'Recently edited','Título (A–Z)':'Title (A–Z)',
+      'Visualização padrão':'Default view','Como as notas são exibidas':'How notes are displayed','Grade':'Grid','Lista':'List',
+      'Cor de destaque':'Accent color','Aplicada em botões, links e destaques':'Used for buttons, links, and highlights','Acessibilidade':'Accessibility','Adapte o Conexo para enxergar e navegar melhor.':'Adjust Conexo to make reading and navigation easier.',
+      'Tamanho da fonte':'Font size','Pequena':'Small','Normal':'Normal','Grande':'Large','Alto contraste':'High contrast','Bordas e textos mais definidos':'Stronger borders and text',
+      'Reduzir animações':'Reduce animations','Menos movimento na tela':'Less motion on screen','Idioma':'Language','Idioma do aplicativo':'App language',
+      'Português (Brasil)':'Portuguese (Brazil)','English':'English','Idioma':'Language','Dados da conta':'Account details','Segurança':'Security','Preferências':'Preferences',
+      'Notificações':'Notifications','Backup automático':'Automatic backup','Frequência':'Frequency','Diária':'Daily','Semanal':'Weekly','Mensal':'Monthly',
+      'Exportar backup':'Export backup','Restaurar backup':'Restore backup','Fazer backup no Drive':'Back up to Drive','Restaurar do Drive':'Restore from Drive',
+      'Google Drive desconectado':'Google Drive disconnected','Conecte sua conta Google para ativar backups na nuvem.':'Connect your Google account to enable cloud backups.',
+      'Conectar Google Drive':'Connect Google Drive','Conecte sua conta':'Connect your account','Sair':'Sign out','Ajuda':'Help',
+      'Calendário':'Calendar','Calendário':'Calendar','Próximos eventos':'Upcoming events','Eventos':'Events','Novo evento':'New event','Hoje':'Today',
+      'Mês anterior':'Previous month','Próximo mês':'Next month','Tamanho da fonte':'Font size','Filtrar:':'Filter:',
+      'Preencha os detalhes do compromisso.':'Enter the event details.','Categoria':'Category','Nova categoria':'New category','Nota vinculada':'Linked note',
+      'Descrição (opcional)':'Description (optional)','Anotações sobre o evento...':'Notes about this event...','Notificação':'Notification','Receber notificação':'Receive notifications',
+      'Notificar antes':'Remind me before','5 minutos':'5 minutes','10 minutos':'10 minutes','30 minutos':'30 minutes','1 hora':'1 hour','1 dia':'1 day',
+      'Som':'Sound','Tocar um alerta sonoro':'Play an alert sound','Gerar Post-it automático':'Create a sticky note automatically',
+      'Criar um Post-it com os dados do evento':'Create a sticky note with event details','Salvar categoria':'Save category','Detalhes do evento':'Event details',
+      'Quando':'When','Descrição':'Description','Nenhuma nota vinculada a este evento.':'No note linked to this event.','Editar':'Edit',
+      'Nova categoria':'New category','Crie uma categoria para organizar seus eventos.':'Create a category to organize your events.',
+      'Ex.: Estudos':'e.g. Studies','Cor':'Color','Remover nota':'Remove note','Excluir categoria':'Delete category',
+      'Versão':'Version','Tema':'Theme','Modo claro':'Light mode','Modo escuro':'Dark mode',
+      'Conta':'Account','Gerenciar conta':'Manage account','Alterar senha':'Change password','Excluir minha conta':'Delete my account',
+      'Atualizar dados':'Update details','Nome completo':'Full name','E-mail atual':'Current email','Nova senha':'New password','Confirmar senha':'Confirm password',
+      'Sair':'Sign out','Editar dados':'Edit details','Foto de perfil':'Profile picture','Alterar foto':'Change photo',
+      'Conta & Configurações':'Account & Settings','Ajuste sua conta, preferências e dados do Conexo.':'Manage your account, preferences, and Conexo data.',
+      'Seções':'Sections','Aparência':'Appearance','Backup':'Backup','Backup e dados':'Backup and data',
+      'Exporte seus dados ou mantenha uma cópia no Google Drive.':'Export your data or keep a copy in Google Drive.',
+      'Cópia de segurança periódica dos seus dados':'Periodic backup of your data','Com que frequência o backup é feito':'How often backups are made',
+      'Último backup':'Last backup','Nenhum backup realizado':'No backup yet','Armazenamento do Google Drive':'Google Drive storage',
+      'Conecte sua conta Google para ativar backups na nuvem.':'Connect your Google account to enable cloud backups.',
+      'Google Drive desconectado':'Google Drive disconnected','Google Drive conectado':'Google Drive connected',
+      'Google Drive não configurado':'Google Drive not configured','O administrador precisa configurar as credenciais OAuth do Google.':'The administrator must configure Google OAuth credentials.',
+      'Backups automáticos são verificados a cada hora pelo servidor.':'Automatic backups are checked hourly by the server.',
+      'Organização':'Organization','Aparência':'Appearance','Notificações':'Notifications','Segurança':'Security',
+      'Trocar dados':'Edit details','Backup automático':'Automatic backup','Diária':'Daily','Semanal':'Weekly','Mensal':'Monthly',
+      'Frequência do backup':'Backup frequency','Fazer backup no Drive':'Back up to Drive','Restaurar do Drive':'Restore from Drive',
+      'Modo Claro':'Light mode','Modo Escuro':'Dark mode','Em uso':'In use','Escolha o tema e a cor de destaque do Conexo.':'Choose Conexo’s theme and accent color.',
+      'Cores de destaque':'Accent colors','Aplicada em botões, links e destaques':'Used for buttons, links, and highlights',
+      'Cópia de segurança periódica dos seus dados':'Periodic backup of your data',
+      'Como o Conexo lembra você dos compromissos.':'How Conexo reminds you about appointments.',
+      'Lembretes da agenda':'Calendar reminders','Avisar antes de cada compromisso':'Remind me before each appointment',
+      'Resumo semanal':'Weekly summary','E-mail com o panorama da semana':'Email with your weekly overview',
+      'Camadas extras de proteção para sua conta.':'Extra layers of protection for your account.',
+      'Verificação em duas etapas':'Two-step verification','Código extra ao entrar em novo dispositivo':'Extra code when signing in on a new device',
+      'Sessões ativas':'Active sessions','2 dispositivos conectados':'2 devices connected','Ver dispositivos':'View devices',
+      'Sair':'Sign out','Dados da conta':'Account details','A imagem deve ter no máximo 5 MB.':'Image must be no larger than 5 MB.',
+      'Digite EXCLUIR para confirmar':'Type DELETE to confirm','Digite':'Type','para confirmar':'to confirm',
+      'Excluir minha conta':'Delete my account','Todos os seus dados serão apagados permanentemente.':'All your data will be permanently deleted.',
+      'Nome':'Name','E-mail':'Email','Senha':'Password','Alterar':'Change','Atualizar':'Update','Salvar alterações':'Save changes',
+      'Idioma alterado (demonstração)':'Language changed (demo)','Idioma salvo.':'Language saved.','Não foi possível salvar o idioma.':'Could not save the language.',
+      'Tamanho da fonte':'Font size','Pequena':'Small','Grande':'Large','Normal':'Normal','Alto contraste':'High contrast',
+      'Reduzir animações':'Reduce animations','Bordas e textos mais definidos':'Stronger borders and text','Menos movimento na tela':'Less motion on screen',
+      'Central de ajuda (demonstração)':'Help center (demo)','Preferência salva':'Preference saved','Preferência salva.':'Preference saved.',
+      'A frequência foi salva':'Frequency saved','Frequência salva':'Frequency saved','Não foi possível salvar a frequência.':'Could not save the frequency.',
+      'Backup automático ativado':'Automatic backup enabled','Backup automático desativado':'Automatic backup disabled',
+      'Sessão encerrada (demonstração)':'Session ended (demo)','Foto de perfil atualizada.':'Profile picture updated.',
+      'Dados atualizados!':'Details updated!','As senhas não coincidem':'The passwords do not match','Não foi possível salvar os dados.':'Could not save your details.',
+      'Não foi possível conectar ao Google Drive.':'Could not connect to Google Drive.','Falha ao consultar o Google Drive.':'Could not check Google Drive.',
+      'Backup de notas e pastas exportado.':'Notes and folders backup exported.','Backup enviado ao Google Drive.':'Backup uploaded to Google Drive.',
+      'Não foi possível exportar o backup.':'Could not export the backup.','Não foi possível enviar o backup ao Drive.':'Could not upload the backup to Drive.',
+      'Não foi possível restaurar do Drive.':'Could not restore from Drive.','Arquivo de backup inválido.':'Invalid backup file.',
+      'Restaurar substituirá todas as suas notas e pastas atuais. Deseja continuar?':'Restoring will replace all your current notes and folders. Continue?',
+      'Restaurar do Google Drive substituirá todas as suas notas e pastas atuais. Deseja continuar?':'Restoring from Google Drive will replace all your current notes and folders. Continue?',
+      'Todos os dados serão removidos permanentemente.':'All data will be permanently removed.',
+      'Conta':'Account','Idioma':'Language','Português (Brasil)':'Portuguese (Brazil)','English':'English',
+      'Conta & Configurações':'Account & Settings','Ajuste sua conta, preferências e dados do Conexo.':'Manage your account, preferences, and Conexo data.',
+      'Seções':'Sections','Aparência':'Appearance','Backup e dados':'Backup and data','Exporte seus dados ou mantenha uma cópia no Google Drive.':'Export your data or keep a copy in Google Drive.',
+      'Cópia de segurança periódica dos seus dados':'Periodic backup of your data','Com que frequência o backup é feito':'How often backups are made',
+      'Último backup':'Last backup','Nenhum backup realizado':'No backup yet','Armazenamento do Google Drive':'Google Drive storage',
+      'Backups automáticos são verificados a cada hora pelo servidor.':'Automatic backups are checked hourly by the server.',
+      'Zona de perigo':'Danger zone','Ações irreversíveis. Leia com atenção antes de prosseguir.':'Irreversible actions. Read carefully before proceeding.',
+      'Todas as notas, agenda e backups serão apagados permanentemente.':'All notes, calendar events, and backups will be permanently deleted.',
+      'A imagem deve ter no máximo 5 MB.':'The image must be no larger than 5 MB.','Atualize suas informações pessoais.':'Update your personal information.',
+      'Escolha uma senha forte e única.':'Choose a strong, unique password.','Dispositivos conectados à sua conta.':'Devices connected to your account.',
+      'São Paulo, BR · ativo agora':'São Paulo, BR · active now','São Paulo, BR · ontem às 22:14':'São Paulo, BR · yesterday at 10:14 PM',
+      'Digite EXCLUIR para confirmar':'Type DELETE to confirm','Todas as suas notas, tags, pastas, agenda e backups serão':'All your notes, tags, folders, calendar events, and backups will be',
+      'apaga­dos permanentemente':'permanently deleted','Organize suas notas em pastas e encontre tudo em segundos.':'Organize your notes into folders and find anything in seconds.',
+      'Filtrar:':'Filter:','Buscar por tag...':'Search by tag...','Adicionar nova nota/pasta':'Add a new note or folder',
+      'Notas com esta tag':'Notes with this tag','Filtro limpo — exibindo todas as pastas':'Filter cleared — showing all folders',
+      'Filtro limpo':'Filter cleared','Criar sua primeira pasta para organizar suas notas.':'Create your first folder to organize your notes.',
+      'Crie uma pasta na tela de Notas para vincular uma nota.':'Create a folder on the Notes page to link a note.',
+      'Notas › Escolher pasta':'Notes › Choose a folder','Ex.: Projetos pessoais':'e.g. Personal projects','Salvar pasta':'Save folder',
+      'Notas —':'Notes —','tag ':'tag ','Sem notas ainda':'No notes yet','Nenhuma subpasta':'No subfolders',
+      'Crie sua primeira pasta para organizar suas notas.':'Create your first folder to organize your notes.',
+      'Lista':'List','Grade':'Grid','Últimas editadas':'Recently edited','Mais recentes':'Newest','Título (A–Z)':'Title (A–Z)',
+      'O título é obrigatório.':'A title is required.','Dê um título ao post-it':'Enter a sticky note title','Dê um título ao evento':'Enter an event title',
+      'Resposta do servidor inválida. Tente novamente.':'Invalid server response. Please try again.','Resposta do servidor inválida.':'Invalid server response.',
+      'Não foi possível entrar.':'Could not sign in.','Não foi possível criar a conta.':'Could not create the account.',
+      'E-mail ou senha incorretos.':'Incorrect email or password.','Este e-mail já está cadastrado.':'This email is already registered.',
+      'As senhas não coincidem':'The passwords do not match','O título do evento é obrigatório.':'The event title is required.',
+      'Confira título, data, hora e categoria do evento.':'Check the event title, date, time, and category.',
+      'Categoria de evento inválida.':'Invalid event category.','Dados inválidos.':'Invalid data.',
+      'Não foi possível criar a pasta.':'Could not create the folder.','Não foi possível salvar a pasta.':'Could not save the folder.',
+      'Não foi possível salvar o post-it.':'Could not save the sticky note.','Não foi possível criar o post-it.':'Could not create the sticky note.',
+      'Não foi possível atualizar o post-it.':'Could not update the sticky note.','Não foi possível excluir o post-it.':'Could not delete the sticky note.',
+      'Conexo — Login':'Conexo — Sign in','Conexo — Notas':'Conexo — Notes','Conexo — Editar nota':'Conexo — Edit note',
+      'Conexo — Calendário':'Conexo — Calendar','Conexo — Post-its':'Conexo — Sticky notes','Conexo — Configurações':'Conexo — Settings',
+      'Tem certeza?':'Are you sure?','Sim, excluir':'Yes, delete','Esta ação não pode ser desfeita.':'This action cannot be undone.',
+      'apagados permanentemente':'permanently deleted','Todas as suas notas, tags, pastas, agenda e backups serão':'All your notes, tags, folders, calendar events, and backups will be',
+      'Todas as suas notas, tags, pastas, agenda e backups serão ':'All your notes, tags, folders, calendar events, and backups will be ',
+      'Não foi possível encerrar a sessão.':'Could not end the session.','Resposta do servidor inválida.':'Invalid server response.',
+      'Informe nome e e-mail.':'Enter your name and email.','Este e-mail já está cadastrado.':'This email is already registered.',
+      'E-mail ou senha incorretos.':'Incorrect email or password.','Informe um nome de pasta com até 80 caracteres.':'Enter a folder name with up to 80 characters.',
+      'As cores informadas são inválidas.':'The selected colors are invalid.','A pasta superior selecionada não existe.':'The selected parent folder does not exist.',
+      'Uma pasta não pode ser movida para dentro dela mesma ou de uma subpasta.':'A folder cannot be moved into itself or one of its subfolders.',
+      'O título da nota é obrigatório.':'The note title is required.','A pasta selecionada não existe.':'The selected folder does not exist.',
+      'O título do post-it é obrigatório.':'The sticky note title is required.','Informe um nome de até 60 caracteres.':'Enter a name with up to 60 characters.',
+      'A cor informada é inválida.':'The selected color is invalid.','O título do evento é obrigatório.':'The event title is required.',
+      'Categoria de evento inválida.':'Invalid event category.','Confira título, data, hora e categoria do evento.':'Check the event title, date, time, and category.',
+      'Preferências inválidas.':'Invalid preferences.','O arquivo não é um backup Conexo compatível.':'This is not a compatible Conexo backup file.',
+      'O backup contém uma estrutura inválida ou grande demais.':'The backup structure is invalid or too large.',
+      'Há uma pasta inválida no backup.':'The backup contains an invalid folder.','O backup contém nomes ou identificadores de pasta inválidos.':'The backup contains invalid folder names or identifiers.',
+      'O backup contém cores de pasta inválidas.':'The backup contains invalid folder colors.','O backup referencia uma pasta superior inexistente.':'The backup refers to a parent folder that does not exist.',
+      'Há uma anotação inválida no backup.':'The backup contains an invalid note.','O backup contém uma anotação inválida ou ligada a uma pasta inexistente.':'The backup contains an invalid note or one linked to a missing folder.',
+      'O backup contém cores de anotação inválidas.':'The backup contains invalid note colors.','O backup contém uma hierarquia de pastas circular.':'The backup contains a circular folder hierarchy.',
+      'O arquivo de backup excede o limite de 10 MB.':'The backup file exceeds the 10 MB limit.','O Google Drive ainda não foi configurado pelo administrador.':'Google Drive has not been configured by the administrator.',
+      'Conecte uma conta Google Drive antes de fazer o backup.':'Connect a Google Drive account before backing up.',
+      'Conecte uma conta Google Drive antes de restaurar.':'Connect a Google Drive account before restoring.',
+      'Nenhum backup Conexo foi encontrado no Google Drive.':'No Conexo backup was found in Google Drive.',
+      'Selecione uma imagem para enviar.':'Select an image to upload.','O arquivo selecionado não é uma imagem válida.':'The selected file is not a valid image.',
+      'Informe nome e um e-mail ainda não cadastrado.':'Enter a name and an email that is not already registered.',
+      'A senha atual está incorreta.':'The current password is incorrect.',
+      'Filtro limpo — exibindo todas as pastas':'Filter cleared — showing all folders','Filtrando por tag':'Filtering by tag',
+      'Pasta superior':'Parent folder','Sem pasta':'No folder','Notas sem pasta':'Unfiled notes',
+      'Post-it criado e vinculado à nota.':'Sticky note created and linked to the note.','Post-it atualizado.':'Sticky note updated.',
+      'Post-it excluído.':'Sticky note deleted.','Nota excluída.':'Note deleted.','Pasta excluída.':'Folder deleted.',
+      'A nota foi excluída.':'The note was deleted.','A pasta foi excluída.':'The folder was deleted.',
+      'Não foi possível salvar a nota.':'Could not save the note.','Não foi possível salvar o evento.':'Could not save the event.',
+      'Não foi possível carregar seus dados.':'Could not load your data.','Erro ao salvar':'Error saving','Salvando...':'Saving...',
+      'Salvo automaticamente':'Saved automatically','Ainda não salva':'Not saved yet','Fonte alterada':'Font changed',
+      'Sem eventos':'No events','Tudo em dia!':'All caught up!','Não há eventos futuros nas categorias ativas.':'There are no upcoming events in the active categories.',
+      'Nenhum compromisso neste dia. Toque em "Novo evento" para adicionar.':'No appointments on this day. Click "New event" to add one.',
+      'Sem categoria':'Uncategorized','Desativada':'Disabled','1 dia antes':'1 day before','silenciosa':'silent',
+      'Vincular pasta inteira':'Link entire folder','Pasta inteira':'Entire folder','todas':'all','Localização:':'Location:',
+      'Amarelo padrão':'Default yellow','Sem pasta vinculada — fica no amarelo clássico do Post-it':'No linked folder — uses the classic sticky note yellow',
+      'Cor derivada da primeira pasta vinculada':'Color based on the first linked folder','Nenhum vínculo. O post-it ficará amarelo padrão.':'No links. The sticky note will use the default yellow color.',
+      'Crie seu primeiro post-it clicando no botão + ali embaixo.':'Create your first sticky note by clicking the + button below.',
+      'Nenhum post-it encontrado para':'No sticky notes found for','A categoria será removida dos eventos.':'The category will be removed from events.',
+      'Nova categoria':'New category','Categoria excluída. Os eventos ficaram sem categoria.':'Category deleted. Its events are now uncategorized.',
+      'Evento excluído':'Event deleted','Evento criado':'Event created','Evento atualizado':'Event updated','Evento salvo.':'Event saved.',
+      'Modo Claro':'Light mode','Modo Escuro':'Dark mode','Em uso':'In use','Clique para alternar o tema':'Click to toggle the theme',
+      'Preferência salva':'Preference saved','Preferência salva.':'Preference saved.','Frequência salva':'Frequency saved',
+      'Não foi possível salvar a frequência.':'Could not save the frequency.','Não foi possível salvar a ordem.':'Could not save the order.',
+      'Não foi possível salvar a visualização.':'Could not save the view.','Ordem de notas salva.':'Note order saved.','Visualização salva.':'View saved.',
+      'Idioma alterado (demonstração)':'Language changed (demo)','Idioma salvo.':'Language saved.','Não foi possível salvar o idioma.':'Could not save the language.',
+      'Verificação em duas etapas ativada':'Two-step verification enabled','Verificação em duas etapas desativada':'Two-step verification disabled',
+      'Backup automático ativado':'Automatic backup enabled','Backup automático desativado':'Automatic backup disabled',
+      'Dados atualizados!':'Details updated!','Foto de perfil atualizada.':'Profile picture updated.','Sessão encerrada (demonstração)':'Session ended (demo)',
+      'Início':'Home','Calendário':'Calendar','Próximos eventos':'Upcoming events','Hoje':'Today','Amanhã':'Tomorrow','Ontem':'Yesterday',
+      'Mês anterior':'Previous month','Próximo mês':'Next month','Editar evento':'Edit event','Categoria':'Category','Nova categoria':'New category',
+      'Preencha os detalhes do compromisso.':'Enter the event details.','Nota vinculada':'Linked note','Descrição (opcional)':'Description (optional)',
+      'Gerar Post-it automático':'Create a sticky note automatically','Criar um Post-it com os dados do evento':'Create a sticky note with event details',
+      'Notificar antes':'Remind me before','Som':'Sound','Tocar um alerta sonoro':'Play an alert sound','Hora':'Time','Data':'Date',
+      'Quando':'When','Editar':'Edit','Excluir':'Delete','Salvar':'Save','Cancelar':'Cancel','Fechar':'Close','Abrir':'Open','Buscar':'Search',
+      'Próximos':'Upcoming','a seguir':'upcoming','Central de ajuda (demonstração)':'Help center (demo)',
+      'Notas com esta tag':'Notes with this tag','Filtro limpo — exibindo todas as pastas':'Filter cleared — showing all folders',
+      'Excluir esta nota?':'Delete this note?','A nota foi excluída.':'The note was deleted.','A pasta foi excluída.':'The folder was deleted.',
+      'Nova nota':'New note','Nova pasta':'New folder','Criar nota':'Create note','Salvar pasta':'Save folder','Salvar categoria':'Save category',
+      'A nota será excluída permanentemente.':'The note will be permanently deleted.','A pasta será excluída.':'The folder will be deleted.',
+      'Tudo em dia!':'All caught up!','Não há eventos futuros nas categorias ativas.':'There are no upcoming events in the active categories.',
+      'Sem eventos':'No events','Nenhum compromisso neste dia. Toque em "Novo evento" para adicionar.':'No appointments on this day. Click "New event" to add one.',
+      'Notificação desativada':'Notification disabled','Desativada':'Disabled','1 dia antes':'1 day before','min antes':'min before','silenciosa':'silent',
+      'Notas vinculadas':'Linked notes','Categoria excluída. Os eventos ficaram sem categoria.':'Category deleted. Its events are now uncategorized.',
+      'Evento excluído':'Event deleted','Categoria excluída':'Category deleted','Evento salvo':'Event saved','Evento atualizado':'Event updated',
+      'Crie um evento':'Create an event','Preencha os detalhes do compromisso.':'Enter the event details.',
+      'Lembrete':'Reminder','Sem notas ainda':'No notes yet','Use o botão abaixo para adicionar.':'Use the button below to add one.',
+      'Nenhum post-it vinculado a esta nota.':'No sticky notes linked to this note.','Nenhum post-it':'No sticky notes',
+      'Criar seu primeiro post-it clicando no botão + ali embaixo.':'Create your first sticky note by clicking the + button below.',
+      'Crie seu primeiro post-it clicando no botão + ali embaixo.':'Create your first sticky note by clicking the + button below.',
+      'Localização:':'Location:','Vincular pasta inteira':'Link entire folder','Pasta inteira':'Entire folder','todas':'all',
+      'Cor derivada da primeira pasta vinculada':'Color based on the first linked folder','Sem pasta vinculada — fica no amarelo clássico do Post-it':'No linked folder — uses the classic sticky note yellow',
+      'Amarelo padrão':'Default yellow','Nenhum vínculo. O post-it ficará amarelo padrão.':'No links. The sticky note will use the default yellow color.',
+      'Dê um título ao post-it':'Enter a sticky note title','Fonte alterada':'Font changed','Post-it criado':'Sticky note created','Post-it atualizado':'Sticky note updated',
+      'Nota excluída.':'Note deleted.','Pasta excluída.':'Folder deleted.','Não foi possível criar a categoria.':'Could not create the category.',
+      'Não foi possível salvar a categoria.':'Could not save the category.','Dados inválidos.':'Invalid data.',
+      'Ação cancelada':'Action cancelled','Vincular pasta inteira (':'Link entire folder (','Pasta:':'Folder:',
+      'Notas › Escolher pasta':'Notes › Choose a folder','Notas › Escolher pasta ou nota':'Notes › Choose a folder or note',
+      'Buscar':'Search','Sem conteúdo de prévia disponível':'No preview content available','Voltar ao evento no calendário':'Back to calendar event',
+      'Central de ajuda (demonstração)':'Help center (demo)','Início':'Home','Calendário':'Calendar','Próximos eventos':'Upcoming events',
+      'Hoje':'Today','Amanhã':'Tomorrow','Ontem':'Yesterday','Novo evento':'New event','Criar novo evento':'Create a new event',
+      'Mês anterior':'Previous month','Próximo mês':'Next month','Editar evento':'Edit event','Categoria':'Category','Nova categoria':'New category',
+      'Nota vinculada':'Linked note','Adicionar nota a esta pasta':'Add a note to this folder','Gerar Post-it automático':'Create a sticky note automatically',
+      'Criar um Post-it com os dados do evento':'Create a sticky note with event details','Descrição (opcional)':'Description (optional)',
+      'Som':'Sound','Tocar um alerta sonoro':'Play an alert sound','Notificar antes':'Remind me before','Hora':'Time','Data':'Date',
+      'Criar post-it vinculado':'Create linked sticky note','Nenhum post-it vinculado a esta nota.':'No sticky notes linked to this note.',
+      'Ação não permitida.':'Action not allowed.','Não foi possível salvar a nota.':'Could not save the note.',
+      'Não foi possível atualizar a nota.':'Could not update the note.','Não foi possível excluir o evento.':'Could not delete the event.',
+      'Não foi possível excluir a categoria.':'Could not delete the category.','Não foi possível excluir a pasta.':'Could not delete the folder.',
+      'Não foi possível excluir a nota.':'Could not delete the note.','Não foi possível carregar seus dados.':'Could not load your data.',
+      'Filtrar:':'Filter:','Buscar por tag...':'Search by tag...','Adicionar nova nota/pasta':'Add a new note or folder',
+      'Escolha uma das suas pastas ou crie uma nova.':'Choose one of your folders or create a new one.',
+      'Título da nota...':'Note title...','Pasta (opcional)':'Folder (optional)','Escreva aqui suas anotações...':'Write your notes here...',
+      'Adicionar':'Add','Criar pasta':'Create folder','Criar subpasta':'Create subfolder','Editar pasta':'Edit folder','Excluir pasta':'Delete folder',
+      'Editar':'Edit','Salvar':'Save','Cancelar':'Cancel','Fechar':'Close','Abrir':'Open','Excluir':'Delete','Restaurar':'Restore',
+      'Uso do armazenamento':'Storage usage','Conectado':'Connected','Desconectado':'Disconnected','Quota indisponível':'Quota unavailable','Indisponível':'Unavailable',
+      'Backup automático ativado':'Automatic backup enabled','Backup automático desativado':'Automatic backup disabled',
+      'Ação cancelada':'Action cancelled','Sessão encerrada (demonstração)':'Session ended (demo)',
+      'Esta ação não pode ser desfeita.':'This action cannot be undone.','Não foi possível carregar seus dados.':'Could not load your data.',
+      'Não foi possível salvar os dados.':'Could not save your data.','Não foi possível excluir a nota.':'Could not delete the note.',
+      'Não foi possível excluir a pasta.':'Could not delete the folder.','Não foi possível excluir o evento.':'Could not delete the event.',
+      'Não foi possível excluir a categoria.':'Could not delete the category.','Não foi possível criar a categoria.':'Could not create the category.',
+      'Não foi possível salvar o idioma.':'Could not save the language.','Idioma salvo.':'Language saved.','Preferência salva':'Preference saved',
+      'Preferência salva.':'Preference saved.','Ordem de notas salva.':'Note order saved.','Visualização salva.':'View saved.',
+      'Não foi possível salvar a ordem.':'Could not save the order.','Não foi possível salvar a visualização.':'Could not save the view.',
+      'Categoria excluída. Os eventos ficaram sem categoria.':'Category deleted. Its events are now uncategorized.',
+      'Evento excluído':'Event deleted','Post-it criado e vinculado à nota.':'Sticky note created and linked to the note.',
+      'Post-it atualizado.':'Sticky note updated.','Post-it excluído.':'Sticky note deleted.','Foto de perfil atualizada.':'Profile picture updated.',
+      'Dados atualizados!':'Details updated!','As senhas não coincidem':'The passwords do not match','A imagem deve ter no máximo 5 MB.':'The image must be no larger than 5 MB.',
+      'Não foi possível exportar o backup.':'Could not export the backup.','Arquivo de backup inválido.':'Invalid backup file.',
+      'Não foi possível restaurar do Drive.':'Could not restore from Drive.','Não foi possível enviar o backup ao Drive.':'Could not upload the backup to Drive.',
+      'Backup de notas e pastas exportado.':'Notes and folders backup exported.','Backup enviado ao Google Drive.':'Backup uploaded to Google Drive.',
+      'Restaurar substituirá todas as suas notas e pastas atuais. Deseja continuar?':'Restoring will replace all your current notes and folders. Continue?',
+      'Restaurar do Google Drive substituirá todas as suas notas e pastas atuais. Deseja continuar?':'Restoring from Google Drive will replace all your current notes and folders. Continue?',
+      'Não foi possível criar a pasta.':'Could not create the folder.','Pasta criada.':'Folder created.','Pasta atualizada.':'Folder updated.',
+      'Nota criada.':'Note created.','Nota atualizada.':'Note updated.','Nota excluída.':'Note deleted.','Evento salvo.':'Event saved.',
+      'Salvar automaticamente':'Save automatically','Ainda não salva':'Not saved yet','Salvo automaticamente':'Saved automatically',
+      'Central de ajuda (demonstração)':'Help center (demo)','Nenhuma nota':'No notes','Nenhum evento':'No events','Nenhum post-it':'No sticky notes',
+      'Salvar alterações':'Save changes','Abrir':'Open','Fechar':'Close','Pesquisar':'Search','Limpar':'Clear','Restaurar':'Restore','Continuar':'Continue',
+      'Próxima':'Next','Anterior':'Previous','Ativado':'On','Desativado':'Off','Silenciosa':'Silent','silenciosa':'silent',
+      'Sem categoria':'Uncategorized','Sem tag':'No tag','Localização':'Location','Filtrando':'Filtering','a seguir':'upcoming',
+      'pasta':'folder','pastas':'folders','nota':'note','notas':'notes','evento':'event','eventos':'events','resultado':'result','resultados':'results',
+      'sem pasta':'unfiled','há ':'ago ','min':'min','hora':'hour','horas':'hours','dia':'day','dias':'days',
+      'Tente novamente':'Please try again','Confira os dados e tente novamente.':'Check your details and try again.','O título é obrigatório.':'A title is required.',
+      'Não foi possível salvar a nota.':'Could not save the note.','Erro ao salvar':'Error saving','Salvando...':'Saving...','Salvo':'Saved',
+      'Carregando...':'Loading...','Nenhum evento futuro':'No upcoming events','Nenhuma nota vinculada':'No linked note',
+      'Anotações':'Notes','Salvar categoria':'Save category','Adicionar categoria':'Add category','Próximos':'Upcoming',
+      'Organize suas notas':'Organize your notes','Preferências salvas':'Preferences saved','Idioma alterado (demonstração)':'Language changed (demo)',
+      'Não foi possível encerrar a sessão.':'Could not end the session.','Quer mesmo excluir?':'Are you sure you want to delete this?',
+      'Voltar ao calendário':'Back to calendar','Editar nota':'Edit note','Criar nova nota':'Create a new note','Criar novo evento':'Create a new event'
+    };
+    const ignored='script,style,noscript,[contenteditable="true"],.folder-name,.folder-tag,.note-entry-title,.linked-postit-title,.linked-postit-body,.tag-result-title,.tag-result-tag,.nb-name,.nb-tag,.cat-pick,.legend-chip,.upcoming-card .title,.ev-title,.ev-chip,.postit-title,.postit-body,.postit-chip,.popover-title span,#d-title,#d-cat-name,#d-note-title,#d-note-preview,#nb-selected-name,#ev-title,#category-name,#pt-title,#pt-body';
+    const pref=JSON.parse(document.getElementById('language-preference-data').textContent);
+    let language=pref.authenticated?pref.lang:'pt';
+    if(!pref.authenticated){try{language=localStorage.getItem('conexo-language')||language}catch(error){}}
+    // Mantem o original e o último texto aplicado para retransladar elementos sem acumular traduções.
+    const originalText=new WeakMap();
+    const lastText=new WeakMap();
+    const originalAttributes=new WeakMap();
+    const lastAttributes=new WeakMap();
+    const attributes=['aria-label','aria-description','title','placeholder'];
+    function translateValue(value){
+      if(language!=='en')return value;
+      const trimmed=value.trim();
+      if(translations[trimmed]!==undefined)return value.replace(trimmed,translations[trimmed]);
+      let match=trimmed.match(/^(\d+) (pasta|pastas) · (\d+) (nota|notas) no total$/);
+      if(match)return `${match[1]} ${match[1]==='1'?'folder':'folders'} · ${match[3]} ${match[3]==='1'?'note':'notes'} total`;
+      match=trimmed.match(/^(\d+) (pasta|pastas) · (\d+) (nota|notas)$/);
+      if(match)return `${match[1]} ${match[1]==='1'?'folder':'folders'} · ${match[3]} ${match[3]==='1'?'note':'notes'}`;
+      match=trimmed.match(/^(\d+) (nota|notas) com esta tag$/);
+      if(match)return `${match[1]} ${match[1]==='1'?'note':'notes'} with this tag`;
+      match=trimmed.match(/^(\d+) (resultado|resultados)$/);
+      if(match)return `${match[1]} ${match[1]==='1'?'result':'results'}`;
+      match=trimmed.match(/^(\d+) (nota|notas)$/);
+      if(match)return `${match[1]} ${match[1]==='1'?'note':'notes'}`;
+      match=trimmed.match(/^(\d+) (evento|eventos) a seguir$/);
+      if(match)return `${match[1]} upcoming ${match[1]==='1'?'event':'events'}`;
+      match=trimmed.match(/^Hoje · (.+)$/);
+      if(match)return `Today · ${match[1]}`;
+      match=trimmed.match(/^(Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) (\d{4})$/);
+      if(match){
+        const monthNames={Janeiro:'January',Fevereiro:'February','Março':'March',Abril:'April',Maio:'May',Junho:'June',Julho:'July',Agosto:'August',Setembro:'September',Outubro:'October',Novembro:'November',Dezembro:'December'};
+        return `${monthNames[match[1]]} ${match[2]}`;
+      }
+      const weekdays={Dom:'Sun',Seg:'Mon',Ter:'Tue',Qua:'Wed',Qui:'Thu',Sex:'Fri','Sáb':'Sat'};
+      if(weekdays[trimmed])return weekdays[trimmed];
+      match=trimmed.match(/^Nenhum post-it encontrado para "(.+)"\.$/);
+      if(match)return `No sticky notes found for "${match[1]}".`;
+      match=trimmed.match(/^Localização: (.+)$/);
+      if(match)return `Location: ${match[1]}`;
+      match=trimmed.match(/^Excluir a categoria "(.+)"\?(.+)$/);
+      if(match)return `Delete category "${match[1]}"?${match[2]}`;
+      match=trimmed.match(/^Excluir o post-it "(.+)"\? (.+)$/);
+      if(match)return `Delete sticky note "${match[1]}"? ${translations[match[2]]||match[2]}`;
+      match=trimmed.match(/^Excluir o evento "(.+)"\? (.+)$/);
+      if(match)return `Delete event "${match[1]}"? ${translations[match[2]]||match[2]}`;
+      return value;
+    }
+    function translateNode(node){
+      if(node.nodeType===Node.TEXT_NODE){
+        if(node.parentElement?.closest(ignored))return;
+        if(!originalText.has(node)||node.data!==lastText.get(node))originalText.set(node,node.data);
+        const translated=translateValue(originalText.get(node));
+        if(node.data!==translated){node.data=translated;lastText.set(node,translated)}
+        else lastText.set(node,node.data);
+      }else if(node.nodeType===Node.ELEMENT_NODE){
+        if(node.matches(ignored))return;
+        attributes.forEach(attribute=>{
+          if(!node.hasAttribute(attribute))return;
+          let values=originalAttributes.get(node);
+          if(!values){values={};originalAttributes.set(node,values)}
+          let applied=lastAttributes.get(node);
+          if(!applied){applied={};lastAttributes.set(node,applied)}
+          if(values[attribute]===undefined||node.getAttribute(attribute)!==applied[attribute])values[attribute]=node.getAttribute(attribute);
+          const translated=translateValue(values[attribute]);
+          if(node.getAttribute(attribute)!==translated)node.setAttribute(attribute,translated);
+          applied[attribute]=translated;
+        });
+        node.childNodes.forEach(translateNode);
+      }
+    }
+    function setLanguage(next){
+      language=next==='en'?'en':'pt';
+      document.documentElement.lang=language==='en'?'en':'pt-BR';
+      try{localStorage.setItem('conexo-language',language)}catch(error){}
+      translateNode(document.documentElement);
+      const selector=document.getElementById('s-lang');
+      if(selector)selector.value=language;
+    }
+    window.setAppLanguage=setLanguage;
+    const localeMethods=['toLocaleString','toLocaleDateString','toLocaleTimeString'];
+    localeMethods.forEach(method=>{
+      const original=Date.prototype[method];
+      Date.prototype[method]=function(locales,...args){
+        const target=language==='en'&&(!locales||locales==='pt-BR'||locales==='pt-br')?'en-US':locales;
+        return original.call(this,target,...args);
+      };
+    });
+    document.addEventListener('DOMContentLoaded',()=>{
+      setLanguage(language);
+      const selector=document.getElementById('s-lang');
+      selector?.addEventListener('change',()=>setLanguage(selector.value));
+      new MutationObserver(records=>records.forEach(record=>{
+        record.addedNodes.forEach(translateNode);
+        if(record.type==='characterData')translateNode(record.target);
+        if(record.type==='attributes')translateNode(record.target);
+      })).observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:attributes});
+    },{once:true});
+  })();
+</script>
