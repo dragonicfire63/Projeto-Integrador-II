@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conexo — Calendário</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cg%20stroke='%234F46E5'%20stroke-width='6'%20stroke-linecap='round'%3E%3Cpath%20d='M50%2050L69%2031M50%2050L31%2031M50%2050L31%2069M50%2050L69%2069'/%3E%3C/g%3E%3Cg%20fill='%234F46E5'%3E%3Ccircle%20cx='70'%20cy='30'%20r='8'/%3E%3Ccircle%20cx='30'%20cy='30'%20r='8'/%3E%3Ccircle%20cx='30'%20cy='70'%20r='8'/%3E%3Ccircle%20cx='70'%20cy='70'%20r='8'/%3E%3Ccircle%20cx='50'%20cy='50'%20r='10.5'/%3E%3C/g%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  (function(){
+    try{
+      const t=localStorage.getItem('theme');
+      if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))
+        document.documentElement.setAttribute('data-theme','dark');
+    }catch(e){}
+  })();
+</script>
+<style>
+  :root{
+    --primary:#4F46E5; --primary-2:#7C3AED; --link:#4F46E5;
+    --ink:#1E1B4B; --muted:#6B7194; --border:#E4E4F4;
+    --bg-gradient:linear-gradient(150deg,#EEF2FF 0%,#FDF4FF 55%,#EEF2FF 100%);
+    --surface:#fff; --kicker-bg:#EEF2FF; --input-bg:#fff;
+    --blob-1:#C7D2FE; --blob-2:#DDD6FE; --blob-opacity:.55;
+    --card-shadow:0 20px 40px -18px rgba(30,27,75,.15);
+    --ring:rgba(79,70,229,.12);
+    --toast-bg:#1E1B4B; --toast-text:#fff;
+    --close-bg:#F1F1FA; --close-hover:#E4E4F4;
+    --danger:#E11D48; --danger-soft:#FFF1F2; --danger-border:#FECDD3;
+    --gx-a:#4F46E5; --gx-b:#9333EA;
+    /* Categorias */
+    --cat-pessoal:#F43F5E; --cat-pessoal-soft:#FFE4E9;
+    --cat-trabalho:#0EA5E9; --cat-trabalho-soft:#E0F2FE;
+    --cat-amigos:#F59E0B; --cat-amigos-soft:#FEF3C7;
+    --cat-aniversarios:#A855F7; --cat-aniversarios-soft:#F3E8FF;
+    /* Calendário */
+    --cell-bg:var(--surface); --cell-hover:var(--kicker-bg);
+    --cell-out:#F5F5FB; --cell-out-fg:#B5B5D5;
+    --day-sel:linear-gradient(135deg,var(--primary),var(--primary-2));
+  }
+  [data-theme="dark"]{
+    --primary:#6366F1; --primary-2:#8B5CF6; --link:#A5B4FC;
+    --ink:#F1F0FF; --muted:#A5A3C4; --border:#312F55;
+    --bg-gradient:linear-gradient(150deg,#12112A 0%,#191634 55%,#12112A 100%);
+    --surface:#1D1B38; --kicker-bg:#26244A; --input-bg:#26244A;
+    --blob-1:#3730A3; --blob-2:#5B21B6; --blob-opacity:.3;
+    --card-shadow:0 20px 40px -18px rgba(0,0,0,.5);
+    --ring:rgba(129,140,248,.28);
+    --toast-bg:#F1F0FF; --toast-text:#1E1B4B;
+    --close-bg:#26244A; --close-hover:#312F55;
+    --danger:#FB7185; --danger-soft:rgba(244,63,94,.08); --danger-border:rgba(251,113,133,.35);
+    --gx-a:#818CF8; --gx-b:#A78BFA;
+    --cat-pessoal:#FB7185; --cat-pessoal-soft:rgba(244,63,94,.16);
+    --cat-trabalho:#38BDF8; --cat-trabalho-soft:rgba(14,165,233,.16);
+    --cat-amigos:#FBBF24; --cat-amigos-soft:rgba(245,158,11,.16);
+    --cat-aniversarios:#C084FC; --cat-aniversarios-soft:rgba(168,85,247,.16);
+    --cell-bg:var(--surface); --cell-hover:var(--kicker-bg);
+    --cell-out:#1A1832; --cell-out-fg:#4A4A78;
+    color-scheme:dark;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Poppins',sans-serif;color:var(--ink);min-height:100vh;
+    display:flex;flex-direction:column;overflow-x:hidden;
+    background:var(--bg-gradient);
+    transition:background .35s ease,color .35s ease;
+  }
+  .blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:var(--blob-opacity);z-index:-1;pointer-events:none;transition:background .35s,opacity .35s}
+  .blob-1{width:420px;height:420px;background:var(--blob-1);top:-120px;right:-80px}
+  .blob-2{width:360px;height:360px;background:var(--blob-2);bottom:-100px;left:-80px}
+
+  /* ===== Topbar ===== */
+  .topbar{max-width:1080px;margin:0 auto;padding:20px 24px 0;width:100%;
+    display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .topbar-left{display:flex;align-items:center;gap:12px}
+  .icon-btn{width:42px;height:42px;border-radius:50%;cursor:pointer;flex-shrink:0;
+    border:1.5px solid var(--border);background:var(--surface);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;text-decoration:none;
+    transition:transform .2s,border-color .2s,background .35s,color .35s}
+  .icon-btn:hover{transform:scale(1.08);border-color:var(--primary);color:var(--link)}
+  .wordmark{display:flex;align-items:center;gap:2px;font-weight:800;font-size:1.3rem;letter-spacing:-.03em;color:var(--ink);text-decoration:none}
+  .xmark{width:.85em;height:.85em;margin:0 .04em}
+  .gx-a,.gx-b{transition:stop-color .35s}
+  .icon-sun{display:none}
+  [data-theme="dark"] .icon-sun{display:block}
+  [data-theme="dark"] .icon-moon{display:none}
+  .topbar{position:relative}
+  .app-logout-btn{position:absolute;right:76px;top:20px;height:42px;padding:0 13px;display:inline-flex;
+    align-items:center;justify-content:center;gap:7px;border:1.5px solid var(--border);border-radius:12px;
+    background:var(--surface);color:var(--muted);font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;transition:.2s}
+  .app-logout-btn:hover{color:var(--danger);border-color:var(--danger-border);background:var(--danger-soft)}
+  .app-logout-btn:disabled{opacity:.55;cursor:wait}
+  @media(max-width:480px){.app-logout-btn{right:72px;padding:0 10px}}
+
+  /* ===== App nav (4 itens, CALENDARIO ativo) ===== */
+  .app-nav{max-width:1080px;margin:14px auto 0;padding:0 24px;width:100%}
+  .app-nav-inner{background:var(--surface);border:1px solid var(--border);border-radius:18px;
+    box-shadow:var(--card-shadow);padding:8px;display:flex;justify-content:space-around;gap:6px;
+    transition:background .35s,border-color .35s}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:11px 6px 9px;border-radius:12px;text-decoration:none;
+    color:var(--muted);font-size:.7rem;font-weight:600;letter-spacing:.06em;
+    cursor:pointer;transition:.2s;position:relative}
+  .nav-item svg{color:var(--muted);transition:color .2s}
+  .nav-item:hover{color:var(--ink);background:var(--kicker-bg)}
+  .nav-item:hover svg{color:var(--link)}
+  .nav-item.active{color:var(--danger);background:var(--danger-soft)}
+  .nav-item.active svg{color:var(--danger)}
+
+  /* ===== Cabeçalho da página ===== */
+  .page-head{max-width:1080px;width:100%;margin:0 auto;padding:22px 24px 0;
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:14px}
+  .page-head h1{font-size:clamp(1.6rem,3.5vw,2.1rem);font-weight:800;letter-spacing:-.4px}
+  .page-sub{color:var(--muted);font-size:.92rem;margin-top:2px}
+
+  /* Toolbar de mês: ‹ Outubro 2026 › + Hoje */
+  .month-toolbar{display:grid;grid-template-columns:136px 256px 84px;align-items:center;justify-content:end;
+    gap:10px;width:496px;flex:0 0 auto;margin-left:0}
+  .month-nav{display:grid;grid-template-columns:36px minmax(0,1fr) 36px;align-items:center;gap:4px;
+    flex:0 0 256px;width:256px;background:var(--surface);
+    border:1px solid var(--border);border-radius:14px;padding:4px;box-shadow:var(--card-shadow)}
+  .month-nav button{width:36px;height:36px;border-radius:10px;border:none;cursor:pointer;
+    background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:center;
+    transition:.18s}
+  .month-nav button:hover{background:var(--kicker-bg);color:var(--link)}
+  .month-name{padding:0 4px;font-weight:700;font-size:1rem;letter-spacing:-.2px;width:100%;min-width:0;
+    text-align:center;white-space:nowrap;overflow:hidden;text-overflow:clip;font-variant-numeric:tabular-nums}
+  .btn-today{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:12px;
+    border:1.5px solid var(--danger-border);background:var(--danger-soft);color:var(--danger);
+    font:inherit;font-weight:600;font-size:.88rem;cursor:pointer;transition:.2s}
+  .btn-today:hover{background:var(--danger);color:#fff;border-color:var(--danger);transform:translateY(-1px)}
+
+  /* ===== Controles de acessibilidade (A+ A−) ===== */
+  .font-controls{display:flex;align-items:center;gap:6px;background:var(--surface);
+    border:1px solid var(--border);border-radius:14px;padding:4px;box-shadow:var(--card-shadow)}
+  .a11y-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid transparent;
+    background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;
+    justify-content:center;font:inherit;font-weight:700;transition:.18s}
+  .a11y-btn:hover{background:var(--kicker-bg);color:var(--link);border-color:var(--border)}
+  .a11y-btn:disabled{opacity:.35;cursor:not-allowed}
+  .a11y-btn.minus{font-size:1.2rem;color:var(--muted)}
+  .a11y-btn.plus{font-size:1.2rem;color:var(--link)}
+  .font-scale-label{display:flex;align-items:center;justify-content:center;
+    flex:0 0 38px;width:38px;height:38px;box-sizing:border-box;padding:0;
+    font-size:.72rem;line-height:1;color:var(--muted);font-weight:600;text-align:center;
+    letter-spacing:.04em;cursor:default}
+
+  main{flex:1;width:100%;max-width:1080px;margin:0 auto;padding:18px 24px 80px;position:relative}
+
+  /* ===== Próximos eventos (topo) ===== */
+  .upcoming-section{margin-bottom:22px}
+  .upcoming-head{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10px;padding:0 4px;gap:10px;flex-wrap:wrap}
+  .upcoming-head h2{font-size:1rem;font-weight:700;letter-spacing:-.1px;display:inline-flex;align-items:center;gap:8px}
+  .upcoming-head h2 svg{color:var(--danger)}
+  .upcoming-head .count{font-size:.78rem;color:var(--muted);font-weight:500}
+  .upcoming-list{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .upcoming-list::-webkit-scrollbar{height:6px}
+  .upcoming-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
+  .upcoming-card{flex:0 0 240px;scroll-snap-align:start;background:var(--surface);
+    border:1px solid var(--border);border-radius:14px;padding:13px 15px;cursor:pointer;
+    transition:.2s;box-shadow:var(--card-shadow);border-left:4px solid var(--cat-color);
+    display:flex;flex-direction:column;gap:6px}
+  .upcoming-card:hover{transform:translateY(-2px);border-color:var(--cat-color)}
+  .upcoming-card .when{font-size:.74rem;color:var(--cat-color);font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:inline-flex;align-items:center;gap:5px}
+  .upcoming-card .title{font-size:.95rem;font-weight:600;color:var(--ink);line-height:1.3}
+  .upcoming-card .meta{font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .upcoming-card .meta .note-mini{display:inline-flex;align-items:center;gap:4px;color:var(--link);font-weight:600}
+  .upcoming-empty{background:var(--surface);border:1.5px dashed var(--border);border-radius:14px;
+    padding:18px 22px;text-align:center;color:var(--muted);font-size:.86rem;display:flex;
+    align-items:center;justify-content:center;gap:10px}
+  .upcoming-empty svg{opacity:.4;flex-shrink:0}
+  .upcoming-empty b{color:var(--ink);font-weight:600}
+
+  /* ===== Legenda das categorias (filtro) ===== */
+  .legend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .legend-custom{display:inline-flex;align-items:center;gap:0;overflow:visible}
+  .legend-delete{width:0;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;
+    border:0 solid transparent;border-radius:9px;background:var(--surface);color:var(--danger);cursor:pointer;
+    opacity:0;overflow:hidden;pointer-events:none;transition:width .18s,margin-left .18s,opacity .18s,border-width .18s}
+  .legend-custom:hover .legend-delete,.legend-custom:focus-within .legend-delete{width:30px;margin-left:4px;
+    border-width:1px;border-color:var(--danger-border);opacity:1;pointer-events:auto}
+  .legend-delete:hover{background:var(--danger);color:#fff}
+  .legend-label{font-size:.78rem;font-weight:600;color:var(--muted);margin-right:4px}
+  .legend-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;
+    background:var(--surface);border:1.5px solid var(--border);cursor:pointer;font-size:.78rem;
+    font-weight:600;color:var(--ink);transition:.2s;user-select:none}
+  .legend-chip:hover{border-color:var(--primary)}
+  .legend-chip.muted{opacity:.4;text-decoration:line-through}
+  .legend-chip.muted .legend-dot{opacity:.3}
+  .legend-dot{width:10px;height:10px;border-radius:50%;background:var(--cat-color)}
+  .legend-count{font-weight:700;color:var(--muted);font-size:.74rem;margin-left:2px}
+
+  /* ===== Grade mensal ===== */
+  .cal-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+    box-shadow:var(--card-shadow);overflow:hidden;transition:background .35s,border-color .35s}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border)}
+  .cal-grid .dow{background:var(--surface);padding:11px 0;text-align:center;
+    font-size:.74rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .cal-cell{background:var(--cell-bg);min-height:96px;padding:8px 6px 6px;cursor:pointer;
+    display:flex;flex-direction:column;gap:4px;transition:.15s;position:relative}
+  .cal-cell:hover{background:var(--cell-hover)}
+  .cal-cell.out{background:var(--cell-out);color:var(--cell-out-fg);cursor:default}
+  .cal-cell.out:hover{background:var(--cell-out)}
+  .cal-cell.selected{box-shadow:inset 0 0 0 2px var(--primary)}
+  .cal-cell .day-num{font-weight:600;font-size:.95rem;width:28px;height:28px;display:flex;
+    align-items:center;justify-content:center;border-radius:50%;align-self:flex-start}
+  .cal-cell.today .day-num{background:var(--danger);color:#fff;font-weight:700;
+    box-shadow:0 4px 12px -2px rgba(225,29,72,.5)}
+  [data-theme="dark"] .cal-cell.today .day-num{box-shadow:0 4px 12px -2px rgba(251,113,133,.4)}
+  .cal-cell .events-mini{display:flex;flex-wrap:wrap;gap:3px;margin-top:auto;padding:0 2px}
+  .cal-cell .ev-dot{width:7px;height:7px;border-radius:50%;background:var(--cat-color);flex-shrink:0}
+  .cal-cell .ev-more{font-size:.62rem;color:var(--muted);font-weight:600;align-self:center;margin-left:2px}
+  .cal-cell .ev-chip{font-size:.62rem;font-weight:600;color:var(--ink);
+    background:var(--cat-soft);padding:2px 6px;border-radius:6px;max-width:100%;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  [data-theme="dark"] .cal-cell .ev-chip{color:var(--cat-color)}
+
+  /* ===== Lista de eventos do dia selecionado ===== */
+  .day-list{margin-top:18px}
+  .day-list-head{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10px;padding:0 4px;gap:10px;flex-wrap:wrap}
+  .day-list-head h2{font-size:1.05rem;font-weight:700;letter-spacing:-.2px}
+  .day-list-head .small-add{display:inline-flex;align-items:center;gap:6px;color:var(--link);
+    font-size:.82rem;font-weight:600;cursor:pointer;text-decoration:none;padding:6px 12px;
+    border-radius:999px;background:var(--kicker-bg);transition:.2s;border:none;font-family:inherit}
+  .day-list-head .small-add:hover{background:var(--primary);color:#fff}
+  .day-list-empty{background:var(--surface);border:1.5px dashed var(--border);border-radius:16px;
+    padding:36px 24px;text-align:center;color:var(--muted)}
+  .day-list-empty svg{margin:0 auto 10px;display:block;opacity:.4}
+  .day-list-empty b{display:block;color:var(--ink);font-size:.95rem;margin-bottom:4px}
+
+  .event-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;
+    transition:.2s;box-shadow:var(--card-shadow);border-left:4px solid var(--cat-color)}
+  .event-item:hover{transform:translateY(-2px);border-color:var(--cat-color)}
+  .event-item .ev-time{font-weight:700;font-size:.92rem;color:var(--ink);min-width:54px;text-align:center;
+    padding:8px 10px;border-radius:10px;background:var(--cat-soft);color:var(--cat-color)}
+  [data-theme="dark"] .event-item .ev-time{color:var(--cat-color)}
+  .event-item .ev-main{flex:1;min-width:0}
+  .event-item .ev-title{font-weight:600;font-size:.96rem;margin-bottom:2px;color:var(--ink)}
+  .event-item .ev-meta{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .event-item .ev-meta .note-link{display:inline-flex;align-items:center;gap:5px;color:var(--link);
+    font-weight:600;text-decoration:none}
+  .event-item .ev-meta .note-link:hover{text-decoration:underline}
+  .event-item .ev-cat-chip{font-size:.7rem;font-weight:600;color:var(--cat-color);
+    background:var(--cat-soft);padding:3px 9px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase}
+
+  /* ===== FAB + ===== */
+  .fab{position:fixed;bottom:24px;right:24px;width:58px;height:58px;border-radius:50%;border:none;
+    cursor:pointer;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 16px 32px -8px rgba(79,70,229,.55);z-index:40;
+    transition:transform .18s,box-shadow .18s}
+  .fab:hover{transform:translateY(-2px) rotate(90deg);box-shadow:0 22px 38px -8px rgba(79,70,229,.65)}
+  .fab:active{transform:translateY(0) rotate(90deg) scale(.95)}
+
+  /* ===== Modais (criar/editar evento) ===== */
+  .overlay{position:fixed;inset:0;background:rgba(10,10,25,.5);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+    opacity:0;pointer-events:none;transition:.25s}
+  .overlay.open{opacity:1;pointer-events:auto}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;
+    width:100%;max-width:480px;position:relative;max-height:90vh;overflow-y:auto;
+    box-shadow:0 30px 60px -15px rgba(0,0,0,.4);transform:translateY(16px) scale(.97);transition:.25s}
+  .overlay.open .modal{transform:none}
+  .modal h2{font-size:1.3rem;font-weight:700;letter-spacing:-.2px}
+  .modal-sub{color:var(--muted);font-size:.86rem;margin:4px 0 18px}
+  .modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;
+    border:none;background:var(--close-bg);color:var(--muted);font-size:1.2rem;cursor:pointer;transition:.2s}
+  .modal-close:hover{background:var(--close-hover);color:var(--ink)}
+
+  .field{margin-bottom:14px}
+  .field label{font-size:.83rem;font-weight:600;display:block;margin-bottom:6px}
+  .field-row{display:flex;gap:10px}
+  .field-row .field{flex:1;margin-bottom:14px}
+  .field input,.field select,.field textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);
+    border-radius:11px;font:inherit;background:var(--input-bg);color:var(--ink);transition:.2s;font-size:.92rem}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--ring)}
+  .field textarea{resize:vertical;min-height:70px;font-family:inherit}
+  .field input[type=date],.field input[type=time]{padding:10px 12px}
+
+  /* Seletor de categoria (chips) */
+  .cat-row{display:flex;gap:8px;flex-wrap:wrap}
+  .category-field-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .category-field-head label{margin:0}
+  .category-add{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid var(--border);
+    border-radius:9px;background:var(--surface);color:var(--link);font:inherit;font-size:.78rem;font-weight:600;cursor:pointer}
+  .category-add:hover{border-color:var(--primary);background:var(--kicker-bg)}
+  .cat-pick{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;
+    border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font:inherit;font-size:.83rem;
+    font-weight:600;color:var(--ink);transition:.2s}
+  .cat-pick:hover{border-color:var(--cat-color)}
+  .cat-pick.active{border-color:var(--cat-color);background:var(--cat-soft);color:var(--cat-color)}
+  [data-theme="dark"] .cat-pick.active{color:var(--cat-color)}
+  .cat-pick .cat-dot{width:10px;height:10px;border-radius:50%;background:var(--cat-color)}
+
+  /* Browser de notas em 2 níveis */
+  .note-browser{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;background:var(--input-bg)}
+  .nb-breadcrumb{display:flex;align-items:center;gap:6px;padding:9px 12px;
+    background:var(--kicker-bg);font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border)}
+  .nb-breadcrumb button{background:none;border:none;color:var(--link);font:inherit;font-weight:600;cursor:pointer;padding:2px 6px;border-radius:6px}
+  .nb-breadcrumb button:hover{text-decoration:underline}
+  .nb-breadcrumb .sep{color:var(--muted);opacity:.5}
+  .nb-list{max-height:170px;overflow-y:auto;padding:6px}
+  .nb-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;cursor:pointer;
+    transition:.15s;color:var(--ink)}
+  .nb-item:hover{background:var(--kicker-bg)}
+  .nb-item.active{background:var(--cat-soft);color:var(--cat-color);font-weight:600}
+  [data-theme="dark"] .nb-item.active{color:var(--cat-color)}
+  .nb-item .nb-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    background:var(--kicker-bg);color:var(--link);flex-shrink:0}
+  .nb-item .nb-name{flex:1;font-size:.86rem;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nb-item .nb-count{font-size:.74rem;color:var(--muted);font-weight:500}
+  .nb-item.folder .nb-ic{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff}
+  .nb-item.folder .nb-count{color:var(--link)}
+  .nb-item.note .nb-ic{background:var(--kicker-bg);color:var(--link)}
+  .nb-clear{display:inline-flex;align-items:center;gap:5px;margin-top:8px;color:var(--muted);
+    font-size:.78rem;font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit;padding:4px 8px;border-radius:8px}
+  .nb-clear:hover{color:var(--danger);background:var(--danger-soft)}
+  .nb-selected{display:none;align-items:center;gap:10px;padding:10px 12px;margin-top:8px;border-radius:10px;
+    background:var(--cat-soft);border:1px solid var(--cat-color)}
+  .nb-selected.show{display:flex}
+  .nb-selected .nb-name{flex:1;font-size:.86rem;font-weight:600;color:var(--ink)}
+  .nb-selected .nb-tag{font-size:.7rem;font-weight:600;color:var(--cat-color);background:var(--surface);
+    padding:2px 8px;border-radius:999px;letter-spacing:.04em}
+
+  /* Bloco de notificação */
+  .notif-block{background:var(--kicker-bg);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+  .notif-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .notif-head-title{display:flex;align-items:center;gap:8px;font-size:.88rem;font-weight:700}
+  .notif-head-title svg{color:var(--link)}
+  .notif-toggle{display:flex;align-items:center;gap:14px}
+  .notif-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--border)}
+  .notif-block.notifications-off .notif-row{opacity:.45}
+  .notif-block.notifications-off .notif-row select,.notif-block.notifications-off .notif-row .switch{pointer-events:none}
+  .notif-row .lab{font-size:.85rem;font-weight:600}
+  .notif-row .lab small{display:block;color:var(--muted);font-size:.74rem;font-weight:400;margin-top:1px}
+  .notif-row select{font:inherit;font-size:.86rem;padding:7px 12px;border-radius:9px;
+    border:1.5px solid var(--border);background:var(--input-bg);color:var(--ink);cursor:pointer;transition:.2s}
+  .notif-row select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--ring)}
+
+  /* Bloco Post-it (dentro da notif, separado) */
+  .postit-block{background:linear-gradient(135deg,#FEF9C3,#FDE68A);border:1px solid #FCD34D;
+    border-radius:14px;padding:14px 16px;margin-top:12px;color:#78350F;
+    transition:opacity .2s}
+  [data-theme="dark"] .postit-block{background:linear-gradient(135deg,rgba(252,211,77,.18),rgba(245,158,11,.12));
+    border-color:rgba(252,211,77,.4);color:#FCD34D}
+  .postit-block.muted{opacity:.45}
+  .postit-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .postit-head-title{display:flex;align-items:center;gap:8px;font-size:.88rem;font-weight:700}
+  .postit-head-title svg{color:#B45309}
+  [data-theme="dark"] .postit-head-title svg{color:#FBBF24}
+  .postit-preview{font-size:.78rem;line-height:1.45;margin-top:8px;padding-top:8px;
+    border-top:1px dashed currentColor;opacity:.85;display:-webkit-box;line-clamp:3;-webkit-line-clamp:3;
+    -webkit-box-orient:vertical;overflow:hidden}
+
+  .switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+  .switch input{opacity:0;width:0;height:0;position:absolute}
+  .track{position:absolute;inset:0;background:var(--close-bg);border:1.5px solid var(--border);
+    border-radius:999px;cursor:pointer;transition:.25s}
+  .track::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:50%;
+    transform:translateY(-50%);background:#fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:.25s}
+  .switch input:checked + .track{background:linear-gradient(135deg,var(--primary),var(--primary-2));border-color:transparent}
+  .switch input:checked + .track::before{transform:translate(20px,-50%)}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 22px;border-radius:13px;font:inherit;font-weight:600;font-size:.95rem;
+    cursor:pointer;border:none;transition:transform .18s,box-shadow .18s,background .35s,color .35s,border-color .35s}
+  .btn-block{width:100%}
+  .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+    box-shadow:0 10px 22px -8px rgba(79,70,229,.55)}
+  .btn-primary:hover{transform:translateY(-2px)}
+  .btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--border)}
+  .btn-outline:hover{border-color:var(--primary);color:var(--link)}
+  .btn-danger{background:transparent;color:var(--danger);border:1.5px solid var(--danger-border)}
+  .btn-danger:hover{background:var(--danger);color:#fff}
+  .btn-row{display:flex;gap:10px;margin-top:18px}
+  .btn-row .btn{flex:1}
+
+  /* ===== Drawer lateral (detalhes do evento) ===== */
+  .drawer{position:fixed;top:0;right:0;height:100%;width:100%;max-width:420px;z-index:55;
+    background:var(--surface);border-left:1px solid var(--border);box-shadow:-30px 0 60px -10px rgba(0,0,0,.4);
+    transform:translateX(100%);transition:transform .3s ease;display:flex;flex-direction:column}
+  .drawer.open{transform:translateX(0)}
+  .drawer-overlay{position:fixed;inset:0;background:rgba(10,10,25,.4);backdrop-filter:blur(2px);
+    z-index:54;opacity:0;pointer-events:none;transition:.3s}
+  .drawer-overlay.open{opacity:1;pointer-events:auto}
+  .drawer-head{padding:22px 22px 16px;border-bottom:1px solid var(--border);position:relative;
+    background:var(--cat-soft);border-bottom-color:var(--cat-color)}
+  .drawer-cat{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;
+    background:var(--surface);color:var(--cat-color);font-size:.7rem;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;border:1px solid var(--cat-color)}
+  .drawer-cat .cat-dot{width:8px;height:8px;border-radius:50%;background:var(--cat-color)}
+  .drawer-head h2{font-size:1.4rem;font-weight:700;letter-spacing:-.3px;color:var(--ink);padding-right:36px}
+  .drawer-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;
+    border:none;background:var(--surface);color:var(--muted);font-size:1.2rem;cursor:pointer;transition:.2s;
+    display:flex;align-items:center;justify-content:center}
+  .drawer-close:hover{background:var(--close-hover);color:var(--ink);transform:rotate(90deg)}
+  .drawer-body{flex:1;overflow-y:auto;padding:18px 22px}
+  .drawer-info{display:flex;flex-direction:column;gap:14px}
+  .info-row{display:flex;align-items:flex-start;gap:11px}
+  .info-ic{width:34px;height:34px;border-radius:10px;background:var(--kicker-bg);color:var(--link);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .info-main{flex:1}
+  .info-lab{font-size:.74rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+  .info-val{font-size:.94rem;color:var(--ink);font-weight:600}
+  .info-val small{display:block;color:var(--muted);font-size:.8rem;font-weight:400;margin-top:2px}
+  .drawer-note{margin-top:8px;background:var(--kicker-bg);border:1px solid var(--border);
+    border-radius:14px;padding:14px 16px;cursor:pointer;transition:.2s;display:block;text-decoration:none;color:inherit}
+  .drawer-note:hover{border-color:var(--primary);transform:translateY(-1px);box-shadow:0 8px 18px -6px rgba(79,70,229,.25)}
+  .drawer-note-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .drawer-note-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#059669,#10B981);color:#fff;flex-shrink:0}
+  .drawer-note-title{font-weight:700;font-size:.96rem;color:var(--ink);flex:1}
+  .drawer-note-go{color:var(--link);font-weight:600;font-size:.8rem;display:inline-flex;align-items:center;gap:4px}
+  .drawer-note-preview{font-size:.84rem;color:var(--muted);line-height:1.5;max-height:65px;overflow:hidden;
+    display:-webkit-box;line-clamp:3;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+  .drawer-no-note{margin-top:8px;padding:14px 16px;border:1.5px dashed var(--border);border-radius:14px;
+    text-align:center;color:var(--muted);font-size:.84rem}
+  .drawer-foot{padding:16px 22px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--surface)}
+  .drawer-foot .btn{flex:1}
+
+  /* ===== Toast ===== */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--toast-bg);color:var(--toast-text);padding:12px 22px;border-radius:999px;
+    font-size:.9rem;opacity:0;transition:.3s,background .35s,color .35s;z-index:60;
+    box-shadow:0 12px 30px -8px rgba(0,0,0,.4);max-width:90vw;text-align:center}
+  #toast.show{transform:translateX(-50%);opacity:1}
+
+  /* ===== Footer ===== */
+  footer{width:100%;max-width:1080px;margin:0 auto;padding:0 24px 28px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .help{display:inline-flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none;
+    font-size:.88rem;font-weight:500;padding:9px 17px;border-radius:999px;
+    border:1.5px solid var(--border);background:var(--surface);transition:.2s}
+  .help:hover{color:var(--link);border-color:var(--primary)}
+  .version{color:var(--muted);font-size:.78rem}
+
+  /* ===== Responsivo ===== */
+  @media (max-width:760px){
+    .cal-cell{min-height:72px;padding:5px 4px 4px}
+    .cal-cell .ev-chip{display:none}
+    .cal-cell .events-mini{margin-top:auto}
+    .page-head{align-items:flex-start}
+    .month-nav{flex-basis:236px;width:236px}
+    .month-name{font-size:.92rem}
+    .month-toolbar{grid-template-columns:136px 236px 84px;width:476px;flex-basis:auto}
+    .fab{bottom:18px;right:18px;width:54px;height:54px}
+  }
+  @media (max-width:640px){
+    .app-nav-inner{padding:6px;gap:2px}
+    .nav-item{font-size:.6rem;padding:9px 4px 7px;letter-spacing:.04em}
+    .nav-item svg{width:20px!important;height:20px!important}
+    .cal-cell{min-height:60px}
+    .cal-cell .day-num{width:24px;height:24px;font-size:.82rem}
+    .cal-grid .dow{padding:8px 0;font-size:.62rem}
+    .modal{padding:22px}
+    .field-row{flex-direction:column;gap:0}
+    .notif-toggle{flex-wrap:wrap}
+    .drawer{max-width:100%}
+    .drawer-head h2{font-size:1.2rem}
+    .month-nav{flex-basis:218px;width:218px;grid-template-columns:32px minmax(0,1fr) 32px}
+    .month-nav button{width:32px;height:32px}
+    .month-name{font-size:.86rem}
+    .month-toolbar{grid-template-columns:1fr 1fr;width:100%;flex-basis:auto;margin-left:0;justify-content:stretch}
+    .month-nav{grid-column:1 / -1;grid-row:2;justify-self:center}
+    .btn-today{grid-column:2;grid-row:1;justify-self:end}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition-duration:.001s!important}
+  }
+</style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- ===== Topbar ===== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" type="button" data-app-back data-fallback="notas.html" aria-label="Voltar à página anterior" title="Voltar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <a class="wordmark" href="notas.html" aria-label="Conexo">cone<svg class="xmark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="16.5" fill="none" stroke="url(#gxTop)" stroke-width="3" stroke-dasharray="3 5" stroke-linecap="round" opacity=".55"/>
+        <g stroke="url(#gxTop)" stroke-width="5.5" stroke-linecap="round"><path d="M50 50L69 31M50 50L31 31M50 50L31 69M50 50L69 69"/></g>
+        <g fill="url(#gxTop)"><circle cx="70" cy="30" r="8"/><circle cx="30" cy="30" r="8"/><circle cx="30" cy="70" r="8"/><circle cx="70" cy="70" r="8"/></g>
+        <g fill="url(#gxTop)" opacity=".8"><circle cx="84" cy="38" r="4.5"/><circle cx="62" cy="16" r="4.5"/><circle cx="16" cy="38" r="4.5"/><circle cx="38" cy="16" r="4.5"/><circle cx="16" cy="62" r="4.5"/><circle cx="38" cy="84" r="4.5"/><circle cx="84" cy="62" r="4.5"/><circle cx="62" cy="84" r="4.5"/></g>
+        <circle cx="50" cy="50" r="10.5" fill="url(#gxTop)"/>
+        <defs><linearGradient id="gxTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="gx-a"/><stop offset="1" class="gx-b"/></linearGradient></defs>
+      </svg>o</a>
+    </div>
+    {% include "controle_sessao.html" %}
+    <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema" title="Modo claro/escuro">
+      <svg class="icon-moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+  </header>
+
+  <!-- ===== Navegação do app (4 itens, CALENDARIO ativo) ===== -->
+  <nav class="app-nav" aria-label="Navegação principal">
+    <div class="app-nav-inner">
+      <a class="nav-item" href="notas.html">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6M9 13l2 2 4-4"/>
+          </svg>
+        </div>
+        <span>NOTAS</span>
+      </a>
+      <a class="nav-item active" href="calendario.html" aria-current="page">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+            <text x="12" y="20" text-anchor="middle" font-size="6.5" font-weight="700" fill="currentColor" stroke="none" font-family="Poppins,sans-serif">1</text>
+          </svg>
+        </div>
+        <span>CALENDARIO</span>
+      </a>
+      <a class="nav-item" href="postits.html">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="3" width="13" height="13" rx="1.5" transform="rotate(-6 10 9)"/>
+            <rect x="7" y="6" width="13" height="13" rx="1.5" transform="rotate(4 13 12)"/>
+            <path d="M11 11l3 3M14 11l-3 3" stroke-width="1.4" opacity=".7"/>
+          </svg>
+        </div>
+        <span>POST iT</span>
+      </a>
+      <a class="nav-item" href="configuracoes.html">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10L12 5 2 10l10 5 10-5z"/>
+            <path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+            <path d="M22 10v6"/>
+          </svg>
+        </div>
+        <span>CONTA</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===== Cabeçalho ===== -->
+  <div class="page-head">
+    <div>
+      <h1>Calendário</h1>
+      <p class="page-sub">Cadastre eventos, vincule notas e nunca mais perca um compromisso.</p>
+    </div>
+    <div class="month-toolbar">
+      <!-- Controles de fonte (A+ A−) -->
+      <div class="font-controls" role="group" aria-label="Tamanho da fonte">
+        <button class="a11y-btn minus" id="font-minus" aria-label="Diminuir fonte" title="Diminuir fonte">A−</button>
+        <span class="font-scale-label" id="font-scale-label">M</span>
+        <button class="a11y-btn plus" id="font-plus" aria-label="Aumentar fonte" title="Aumentar fonte">A+</button>
+      </div>
+      <div class="month-nav">
+        <button id="prev-month" aria-label="Mês anterior" title="Mês anterior">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="month-name" id="month-name">Outubro 2026</span>
+        <button id="next-month" aria-label="Próximo mês" title="Próximo mês">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <button class="btn-today" id="btn-today">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg>
+        Hoje
+      </button>
+    </div>
+  </div>
+
+  <main>
+    <!-- Próximos eventos (topo, visíveis imediatamente) -->
+    <section class="upcoming-section" id="upcoming-section" aria-label="Próximos eventos">
+      <div class="upcoming-head">
+        <h2>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+          Próximos eventos
+        </h2>
+        <span class="count" id="upcoming-count"></span>
+      </div>
+      <div id="upcoming-body"></div>
+    </section>
+
+    <!-- Legenda / filtro de categorias -->
+    <div class="legend" id="legend"></div>
+
+    <!-- Grade mensal -->
+    <div class="cal-card">
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- Lista de eventos do dia selecionado -->
+    <div class="day-list">
+      <div class="day-list-head">
+        <h2 id="day-list-title">Eventos</h2>
+        <button class="small-add" id="add-on-day">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Novo evento
+        </button>
+      </div>
+      <div id="day-list-body"></div>
+    </div>
+  </main>
+
+  <!-- FAB + -->
+  <button class="fab" id="fab-add" aria-label="Criar novo evento" title="Novo evento (N)">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <footer>
+    <a href="#" class="help" onclick="event.preventDefault();showToast('Central de ajuda (demonstração)')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      Ajuda
+    </a>
+    <span class="version">Conexo · v1.0</span>
+  </footer>
+
+  <!-- ===== Modal: criar/editar evento ===== -->
+  <div class="overlay" id="modal-event">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" onclick="closeModal('modal-event')" aria-label="Fechar">&times;</button>
+      <h2 id="event-modal-title">Novo evento</h2>
+      <p class="modal-sub">Preencha os detalhes do compromisso.</p>
+      <form id="form-event">
+        <div class="field">
+          <label for="ev-title">Título</label>
+          <input id="ev-title" type="text" placeholder="Ex.: Prova de Biologia" required maxlength="80">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="ev-date">Data</label>
+            <input id="ev-date" type="date" required>
+          </div>
+          <div class="field">
+            <label for="ev-time">Hora</label>
+            <input id="ev-time" type="time" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="category-field-head">
+            <label>Categoria</label>
+            <button type="button" class="category-add" id="open-category-modal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Nova categoria
+            </button>
+          </div>
+          <div class="cat-row" id="cat-row">
+          </div>
+        </div>
+        <div class="field">
+          <label>Nota vinculada</label>
+          <div class="note-browser" id="note-browser">
+            <div class="nb-breadcrumb" id="nb-breadcrumb">
+              <span>Notas</span>
+            </div>
+            <div class="nb-list" id="nb-list"></div>
+          </div>
+          <div class="nb-selected" id="nb-selected">
+            <div class="nb-ic" style="background:linear-gradient(135deg,#059669,#10B981);color:#fff">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            </div>
+            <div class="nb-name" id="nb-selected-name"></div>
+            <span class="nb-tag" id="nb-selected-tag"></span>
+            <button type="button" class="nb-clear" id="nb-clear" title="Remover nota">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="ev-desc">Descrição (opcional)</label>
+          <textarea id="ev-desc" placeholder="Anotações sobre o evento..."></textarea>
+        </div>
+
+        <!-- Bloco de notificação -->
+        <div class="notif-block" id="notif-block">
+          <div class="notif-head">
+            <div class="notif-head-title">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Notificação
+            </div>
+            <label class="switch" title="Receber notificação">
+              <input type="checkbox" id="ev-notif-on" checked>
+              <span class="track"></span>
+            </label>
+          </div>
+          <div class="notif-row">
+            <div class="lab">Notificar antes</div>
+            <select id="ev-notify-before">
+              <option value="5">5 minutos</option>
+              <option value="10" selected>10 minutos</option>
+              <option value="30">30 minutos</option>
+              <option value="60">1 hora</option>
+              <option value="1440">1 dia</option>
+            </select>
+          </div>
+          <div class="notif-row">
+            <div class="lab">Som <small>Tocar um alerta sonoro</small></div>
+            <label class="switch"><input type="checkbox" id="ev-sound" checked><span class="track"></span></label>
+          </div>
+        </div>
+
+        <!-- Bloco Post-it (gerar automaticamente) -->
+        <div class="postit-block" id="postit-block">
+          <div class="postit-head">
+            <div class="postit-head-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="13" height="13" rx="1.5" transform="rotate(-6 10 9)"/><rect x="7" y="6" width="13" height="13" rx="1.5" transform="rotate(4 13 12)"/></svg>
+              Gerar Post-it automático
+            </div>
+            <label class="switch" title="Criar um Post-it com os dados do evento">
+              <input type="checkbox" id="ev-postit-on" checked>
+              <span class="track"></span>
+            </label>
+          </div>
+          <div class="postit-preview" id="postit-preview"></div>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-event')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-category">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="category-modal-title">
+      <button class="modal-close" onclick="closeModal('modal-category')" aria-label="Fechar">&times;</button>
+      <h2 id="category-modal-title">Nova categoria</h2>
+      <p class="modal-sub">Crie uma categoria para organizar seus eventos.</p>
+      <form id="form-category">
+        <div class="field">
+          <label for="category-name">Nome</label>
+          <input id="category-name" type="text" maxlength="60" placeholder="Ex.: Estudos" required>
+        </div>
+        <div class="field">
+          <label for="category-color">Cor</label>
+          <input id="category-color" type="color" value="#14B8A6" aria-label="Cor da categoria">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-category')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar categoria</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Drawer: detalhes do evento ===== -->
+  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Detalhes do evento">
+    <header class="drawer-head">
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="Fechar">&times;</button>
+      <span class="drawer-cat" id="d-cat"><span class="cat-dot"></span><span id="d-cat-name"></span></span>
+      <h2 id="d-title"></h2>
+    </header>
+    <div class="drawer-body">
+      <div class="drawer-info">
+        <div class="info-row">
+          <div class="info-ic">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
+          <div class="info-main">
+            <div class="info-lab">Quando</div>
+            <div class="info-val" id="d-when"></div>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-ic">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div class="info-main">
+            <div class="info-lab">Notificação</div>
+            <div class="info-val" id="d-notif"></div>
+          </div>
+        </div>
+        <div class="info-row" id="d-desc-row">
+          <div class="info-ic">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg>
+          </div>
+          <div class="info-main">
+            <div class="info-lab">Descrição</div>
+            <div class="info-val" id="d-desc" style="font-weight:400;line-height:1.55"></div>
+          </div>
+        </div>
+
+        <a class="drawer-note" id="d-note-link" href="editor_nota.html">
+          <div class="drawer-note-head">
+            <div class="drawer-note-ic">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            </div>
+            <div class="drawer-note-title" id="d-note-title"></div>
+            <div class="drawer-note-go">Abrir
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </div>
+          <div class="drawer-note-preview" id="d-note-preview"></div>
+        </a>
+        <div class="drawer-no-note" id="d-no-note">Nenhuma nota vinculada a este evento.</div>
+      </div>
+    </div>
+    <footer class="drawer-foot">
+      <button class="btn btn-outline" id="d-edit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        Editar
+      </button>
+      <button class="btn btn-danger" id="d-del">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Excluir
+      </button>
+    </footer>
+  </aside>
+
+  <div id="toast"></div>
+  {% include "confirma_delete.html" %}
+
+{{ notes_json|json_script:"notes-data" }}
+{{ folders_json|json_script:"folders-data" }}
+{{ events_json|json_script:"events-data" }}
+{{ categories_json|json_script:"categories-data" }}
+<script>
+  const root=document.documentElement;
+  const $=id=>document.getElementById(id);
+  const NOTES_BY_FOLDER=JSON.parse($('notes-data').textContent);
+  const FOLDERS=JSON.parse($('folders-data').textContent);
+  const csrfToken=()=>document.cookie.split('; ').find(row=>row.startsWith('csrftoken='))?.split('=')[1]||'';
+
+  /* ===== Tema claro/escuro ===== */
+  function setTheme(t){
+    root.setAttribute('data-theme',t);
+    try{localStorage.setItem('theme',t)}catch(e){}
+  }
+  function toggleTheme(){setTheme(root.getAttribute('data-theme')==='dark'?'light':'dark')}
+
+  /* ===== Modais ===== */
+  function openModal(id){$(id).classList.add('open')}
+  function closeModal(id){$(id).classList.remove('open')}
+  document.querySelectorAll('.overlay').forEach(o=>{
+    o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')});
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));
+      closeDrawer();
+    }
+  });
+
+  /* ===== Toast ===== */
+  let toastTimer;
+  function showToast(msg){
+    const t=$('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+  }
+
+  /* ===== Drawer lateral ===== */
+  function openDrawer(){ $('drawer').classList.add('open'); $('drawer-overlay').classList.add('open'); }
+  function closeDrawer(){ $('drawer').classList.remove('open'); $('drawer-overlay').classList.remove('open'); }
+
+  /* ===== Categorias ===== */
+  const CATEGORIES=Object.fromEntries(JSON.parse($('categories-data').textContent).map(category=>[
+    category.id,
+    {label:category.label,color:category.color,soft:`color-mix(in srgb, ${category.color} 16%, transparent)`,custom:category.custom}
+  ]));
+
+  /* ===== Pastas e notas mockadas — definidas em notas-mock.js (FOLDERS, NOTES_BY_FOLDER) ===== */
+
+  /* ===== Eventos mockados — Outubro 2026 =====
+     (Hoje = 2026-10-23, conforme data de sistema) */
+  const TODAY=new Date();
+  TODAY.setHours(0,0,0,0);
+  let events=JSON.parse($('events-data').textContent);
+
+  /* ===== Estado do calendário ===== */
+  const WEEKDAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const dateKey=date=>[date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+  let viewDate=new Date(TODAY.getFullYear(),TODAY.getMonth(),1); // 1º do mês visível
+  let selectedDate=new Date(TODAY); // dia selecionado (default hoje)
+  let activeFilters=new Set(Object.keys(CATEGORIES));
+
+  /* ===== Renderiza legenda ===== */
+  function renderLegend(){
+    const legend=$('legend');
+    legend.replaceChildren();
+    const categories=Object.entries(CATEGORIES);
+    if(!categories.length)return;
+    legend.innerHTML='<span class="legend-label">Filtrar:</span>';
+    categories.forEach(([key,c])=>{
+      const count=events.filter(e=>e.cat===key).length;
+      const muted=!activeFilters.has(key);
+      const chip=document.createElement('button');
+      chip.className='legend-chip'+(muted?' muted':'');
+      chip.style.setProperty('--cat-color',c.color);
+      const dot=document.createElement('span');
+      dot.className='legend-dot';
+      const label=document.createElement('span');
+      label.textContent=c.label;
+      const total=document.createElement('span');
+      total.className='legend-count';
+      total.textContent=count;
+      chip.append(dot,label,total);
+      chip.onclick=()=>{
+        if(activeFilters.has(key)) activeFilters.delete(key); else activeFilters.add(key);
+        // Item 4: filtro afeta grade + próximos + dia selecionado
+        renderLegend(); renderCalendar(); renderDayList(); renderUpcoming();
+      };
+      if(c.custom){
+        const group=document.createElement('div');
+        group.className='legend-custom';
+        group.appendChild(chip);
+        const remove=document.createElement('button');
+        remove.type='button';
+        remove.className='legend-delete';
+        remove.title=`Excluir categoria ${c.label}`;
+        remove.setAttribute('aria-label',`Excluir categoria ${c.label}`);
+        remove.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m2 0-.8 14H6.8L6 6m4 4v6m4-6v6"/></svg>';
+        remove.addEventListener('click',event=>{event.stopPropagation();deleteCategory(key,c.label)});
+        group.appendChild(remove);
+        legend.appendChild(group);
+      }else legend.appendChild(chip);
+    });
+  }
+
+  async function deleteCategory(id,label){
+    const count=events.filter(event=>event.cat===id).length;
+    const detail=count?` ${count} ${count===1?'evento ficará':'eventos ficarão'} sem categoria.`:'';
+    if(!await askDeleteConfirmation(`Excluir a categoria "${label}"?${detail}`))return;
+    const response=await fetch('/api/categories/'+encodeURIComponent(id)+'/',{method:'DELETE',headers:{'X-CSRFToken':csrfToken()}});
+    const data=await response.json();
+    if(!response.ok){showToast(data.error||'Não foi possível excluir a categoria.');return;}
+    events=events.map(event=>event.cat===id?{...event,cat:data.fallback_category??''}:event);
+    delete CATEGORIES[id];
+    activeFilters.delete(id);
+    if(selectedCat===id)selectedCat='';
+    renderCatRow();
+    renderLegend(); renderCalendar(); renderDayList(); renderUpcoming();
+    updatePostitPreview();
+    showToast('Categoria excluída. Os eventos ficaram sem categoria.');
+  }
+
+  function categoryFor(id){
+    return CATEGORIES[id]||{label:'Sem categoria',color:'#6B7194',soft:'color-mix(in srgb, #6B7194 16%, transparent)'};
+  }
+
+  /* ===== Renderiza grade mensal ===== */
+  function renderCalendar(){
+    $('month-name').textContent=`${MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
+    const grid=$('cal-grid');
+    grid.innerHTML='';
+    // Cabeçalho dias da semana
+    WEEKDAYS.forEach(d=>{
+      const el=document.createElement('div');
+      el.className='dow'; el.textContent=d;
+      grid.appendChild(el);
+    });
+    // Calcular primeiro dia visível
+    const firstOfMonth=new Date(viewDate.getFullYear(),viewDate.getMonth(),1);
+    const startDay=new Date(firstOfMonth);
+    startDay.setDate(1-firstOfMonth.getDay()); // recua até o domingo da semana
+    // 6 semanas = 42 células
+    for(let i=0;i<42;i++){
+      const d=new Date(startDay); d.setDate(startDay.getDate()+i);
+      const cell=document.createElement('div');
+      cell.className='cal-cell';
+      const isOut=d.getMonth()!==viewDate.getMonth();
+      if(isOut) cell.classList.add('out');
+      // É hoje?
+      const isToday=d.toDateString()===TODAY.toDateString();
+      if(isToday) cell.classList.add('today');
+      // Está selecionado?
+      if(d.toDateString()===selectedDate.toDateString()) cell.classList.add('selected');
+
+      // Número do dia
+      const num=document.createElement('div');
+      num.className='day-num';
+      num.textContent=d.getDate();
+      cell.appendChild(num);
+
+      // Eventos do dia (visíveis conforme filtro)
+      if(!isOut){
+        const dayKey=dateKey(d);
+        const dayEvents=events.filter(e=>e.date===dayKey && (!e.cat||activeFilters.has(e.cat)))
+          .sort((a,b)=>a.time.localeCompare(b.time));
+        if(dayEvents.length){
+          const mini=document.createElement('div');
+          mini.className='events-mini';
+          dayEvents.slice(0,4).forEach(ev=>{
+            const dot=document.createElement('span');
+            dot.className='ev-dot';
+            dot.style.setProperty('--cat-color',categoryFor(ev.cat).color);
+            mini.appendChild(dot);
+          });
+          if(dayEvents.length>4){
+            const more=document.createElement('span');
+            more.className='ev-more';
+            more.textContent='+'+(dayEvents.length-4);
+            mini.appendChild(more);
+          }
+          cell.appendChild(mini);
+          // Em telas maiores, mostra o chip do 1º evento
+          if(window.innerWidth>760 && dayEvents[0]){
+            const chip=document.createElement('div');
+            chip.className='ev-chip';
+            chip.style.setProperty('--cat-soft',categoryFor(dayEvents[0].cat).soft);
+            chip.style.setProperty('--cat-color',categoryFor(dayEvents[0].cat).color);
+            chip.textContent=dayEvents[0].time+' '+dayEvents[0].title;
+            cell.appendChild(chip);
+          }
+        }
+      }
+
+      // Clique em qualquer dia → abre modal de criar evento com a data pré-preenchida.
+      // (Item 1 solicitado pelo usuário: clicar em dia inicia criação de evento.)
+      // Dias "out" também navegam para o mês correto antes de abrir o modal.
+      const openCreateFor=(dateObj)=>{
+        if(dateObj.getMonth()!==viewDate.getMonth()){
+          viewDate=new Date(dateObj.getFullYear(),dateObj.getMonth(),1);
+          renderCalendar();
+        }
+        selectedDate=new Date(dateObj);
+        // Atualiza seleção visual sem chamar renderDayList (que abriria a lista)
+        document.querySelectorAll('.cal-cell.selected').forEach(c=>c.classList.remove('selected'));
+        // Marca a célula correspondente como selecionada (renderiza uma única vez)
+        renderCalendar();
+        renderDayList();
+        openEventModal(null, dateObj);
+      };
+      if(!isOut){
+        cell.onclick=()=>openCreateFor(d);
+      } else {
+        cell.onclick=()=>openCreateFor(d);
+      }
+
+      grid.appendChild(cell);
+    }
+  }
+
+  /* ===== Renderiza seção de Próximos eventos (topo) — item 3 ===== */
+  function renderUpcoming(){
+    const body=$('upcoming-body');
+    const count=$('upcoming-count');
+    body.innerHTML='';
+    // Pega eventos a partir de agora (TODAY + hora atual), respeitando o filtro
+    const now=new Date(TODAY); now.setHours(0,0,0,0); // início do dia de hoje
+    const upcoming=events
+      .filter(e=>{
+        if(e.cat&&!activeFilters.has(e.cat)) return false;
+        const evDate=new Date(e.date+'T'+e.time);
+        return evDate>=now;
+      })
+      .sort((a,b)=>{
+        const da=new Date(a.date+'T'+a.time), db=new Date(b.date+'T'+b.time);
+        return da-db;
+      })
+      .slice(0,5);
+    count.textContent=upcoming.length?(upcoming.length+' evento'+(upcoming.length>1?'s':'')+' a seguir'):'nenhum evento futuro';
+    if(upcoming.length===0){
+      body.innerHTML=`<div class="upcoming-empty">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <b>Tudo em dia!</b> Não há eventos futuros nas categorias ativas.
+      </div>`;
+      return;
+    }
+    const list=document.createElement('div');
+    list.className='upcoming-list';
+    upcoming.forEach(ev=>{
+      const cat=categoryFor(ev.cat);
+      const evDate=new Date(ev.date+'T'+ev.time);
+      const isToday=evDate.toDateString()===TODAY.toDateString();
+      // Etiqueta de quando: Hoje 16:00 / Amanhã 09:00 / 27/10 18:00
+      let whenLabel;
+      if(isToday) whenLabel='Hoje '+ev.time;
+      else {
+        const tomorrow=new Date(TODAY); tomorrow.setDate(TODAY.getDate()+1);
+        if(evDate.toDateString()===tomorrow.toDateString()) whenLabel='Amanhã '+ev.time;
+        else whenLabel=evDate.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+' '+ev.time;
+      }
+      const card=document.createElement('div');
+      card.className='upcoming-card';
+      card.style.setProperty('--cat-color',cat.color);
+      card.innerHTML=`
+        <div class="when">${whenLabel}</div>
+        <div class="title">${ev.title}</div>
+        <div class="meta">
+          ${ev.cat?`<span>${cat.label}</span>`:''}
+          ${ev.note?`<span class="note-mini">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            ${ev.note.title}
+          </span>`:''}
+        </div>
+      `;
+      card.onclick=()=>openEventDrawer(ev);
+      list.appendChild(card);
+    });
+    body.appendChild(list);
+  }
+
+  /* ===== Acessibilidade: botões A+ A− (item 5) ===== */
+  // 5 níveis: 0=P, 1=M (default), 2=G, 3=GG, 4=GGG
+  const FONT_SCALE_BASE=16; // px no nível 1
+  const FONT_SCALE_MAP=[13.5,16,18,20.5,23]; // tamanhos em px
+  const FONT_SCALE_LABELS=['P','M','G','GG','GGG'];
+  let fontScale=1;
+  try{fontScale=JSON.parse(localStorage.getItem('conexo-font-scale')||'1')}catch(e){}
+  function applyFontScale(){
+    document.documentElement.style.fontSize=FONT_SCALE_MAP[fontScale]+'px';
+    $('font-scale-label').textContent=FONT_SCALE_LABELS[fontScale];
+    $('font-minus').disabled=fontScale<=0;
+    $('font-plus').disabled=fontScale>=4;
+    try{localStorage.setItem('conexo-font-scale',JSON.stringify(fontScale))}catch(e){}
+  }
+  $('font-minus').onclick=()=>{ if(fontScale>0){fontScale--;applyFontScale();} };
+  $('font-plus').onclick=()=>{ if(fontScale<4){fontScale++;applyFontScale();} };
+
+  /* ===== Renderiza lista de eventos do dia selecionado ===== */
+  function renderDayList(){
+    const dayKey=dateKey(selectedDate);
+    const dayEvents=events.filter(e=>e.date===dayKey && (!e.cat||activeFilters.has(e.cat)))
+      .sort((a,b)=>a.time.localeCompare(b.time));
+
+    const isToday=selectedDate.toDateString()===TODAY.toDateString();
+    const fmtDate=selectedDate.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+    $('day-list-title').textContent=(isToday?'Hoje · ':'')+fmtDate.charAt(0).toUpperCase()+fmtDate.slice(1);
+
+    const body=$('day-list-body');
+    body.innerHTML='';
+    if(dayEvents.length===0){
+      body.innerHTML=`<div class="day-list-empty">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <b>Sem eventos</b>Nenhum compromisso neste dia. Toque em "Novo evento" para adicionar.
+      </div>`;
+      return;
+    }
+    dayEvents.forEach(ev=>{
+      const cat=categoryFor(ev.cat);
+      const item=document.createElement('div');
+      item.className='event-item';
+      item.style.setProperty('--cat-color',cat.color);
+      item.style.setProperty('--cat-soft',cat.soft);
+      item.innerHTML=`
+        <div class="ev-time">${ev.time}</div>
+        <div class="ev-main">
+          <div class="ev-title">${ev.title}</div>
+          <div class="ev-meta">
+            ${ev.cat?`<span class="ev-cat-chip">${cat.label}</span>`:''}
+            ${ev.note?`<span class="note-link">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              ${ev.note.title} · ${ev.note.folder.toUpperCase()}
+            </span>`:''}
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>
+      `;
+      item.onclick=()=>openEventDrawer(ev);
+      body.appendChild(item);
+    });
+  }
+
+  /* ===== Drawer: detalhes do evento ===== */
+  function openEventDrawer(ev){
+    const cat=categoryFor(ev.cat);
+    const drawer=$('drawer');
+    drawer.style.setProperty('--cat-color',cat.color);
+    drawer.style.setProperty('--cat-soft',cat.soft);
+    $('d-cat-name').textContent=cat.label;
+    $('d-title').textContent=ev.title;
+    const dateObj=new Date(ev.date+'T'+ev.time);
+    const when=dateObj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+    $('d-when').textContent=`${when.charAt(0).toUpperCase()+when.slice(1)} · ${ev.time}`;
+    // Notificação
+    if(!ev.notif.on){
+      $('d-notif').textContent='Desativada';
+    } else {
+      const before=ev.notif.before;
+      const beforeStr = before===1440?'1 dia antes':before+' min antes';
+      const meios=[];
+      if(ev.notif.sound) meios.push('Som');
+      $('d-notif').textContent=`${beforeStr}${meios.length?' · '+meios.join(' + '):' · silenciosa'}`;
+    }
+    // Descrição
+    if(ev.desc){
+      $('d-desc-row').style.display='flex';
+      $('d-desc').textContent=ev.desc;
+    } else {
+      $('d-desc-row').style.display='none';
+    }
+    // Nota vinculada
+    if(ev.note){
+      const folder=FOLDERS.find(f=>f.id===ev.note.folder);
+      const noteData=(NOTES_BY_FOLDER[ev.note.folder]||[]).find(n=>n.t===ev.note.title);
+      $('d-note-link').style.display='block';
+      $('d-no-note').style.display='none';
+      $('d-note-title').textContent=ev.note.title;
+      $('d-note-preview').textContent=noteData?(noteData.p||noteData.note||noteData.e):'';
+      // Se a nota é "Mitose vs. Meiose", link vai direto pro editor; senão também
+      $('d-note-link').href='editor_nota.html';
+    } else {
+      $('d-note-link').style.display='none';
+      $('d-no-note').style.display='block';
+    }
+    // Botões
+    $('d-edit').onclick=()=>{ closeDrawer(); setTimeout(()=>openEventModal(ev),250); };
+    $('d-del').onclick=async()=>{
+      if(!await askDeleteConfirmation(`Excluir o evento "${ev.title}"? Esta ação não pode ser desfeita.`))return;
+      const response=await fetch('/api/events/'+ev.id+'/',{method:'DELETE',headers:{'X-CSRFToken':csrfToken()}});
+      if(!response.ok){showToast('Não foi possível excluir o evento.');return;}
+      events=events.filter(e=>e.id!==ev.id);
+      closeDrawer();
+      renderLegend(); renderCalendar(); renderDayList(); renderUpcoming();
+      showToast('🗑️ Evento excluído');
+    };
+    openDrawer();
+  }
+
+  /* ===== Modal: criar/editar evento ===== */
+  let editingId=null;
+  let selectedCat='';
+  let nbLevel='folders'; // 'folders' | 'notes'
+  let nbFolderSel=null;
+  let nbNoteSel=null;
+
+  function openEventModal(ev=null, presetDate=null){
+    editingId=ev?ev.id:null;
+    $('event-modal-title').textContent=ev?'Editar evento':'Novo evento';
+
+    // Pré-preenche com dia selecionado
+    if(ev){
+      $('ev-title').value=ev.title;
+      $('ev-date').value=ev.date;
+      $('ev-time').value=ev.time;
+      $('ev-desc').value=ev.desc||'';
+      selectedCat=ev.cat;
+      $('ev-notif-on').checked=ev.notif.on;
+      $('ev-notify-before').value=String(ev.notif.before);
+      $('ev-sound').checked=ev.notif.sound;
+      $('ev-postit-on').checked=ev.postit?true:false;
+      nbNoteSel=ev.note?{...ev.note}:null;
+      nbFolderSel=ev.note?ev.note.folder:null;
+      nbLevel=ev.note?'notes':'folders';
+    } else {
+      $('form-event').reset();
+      selectedCat='';
+      // Se recebeu uma data pré-selecionada (clique em dia), usa ela. Senão usa selectedDate.
+      const baseDate=presetDate||selectedDate;
+      $('ev-date').value=dateKey(baseDate);
+      $('ev-time').value='09:00';
+      $('ev-notif-on').checked=true;
+      $('ev-notify-before').value='10';
+      $('ev-sound').checked=true;
+      $('ev-postit-on').checked=true; // ON por padrão (item 2 solicitado)
+      nbNoteSel=null; nbFolderSel=null; nbLevel='folders';
+    }
+    renderCatRow();
+    renderNoteBrowser();
+    updateNbSelected();
+    updatePostitPreview();
+    openModal('modal-event');
+    setTimeout(()=>$('ev-title').focus(),100);
+  }
+
+  /* ===== Pré-visualização do Post-it + listeners ===== */
+  function updatePostitPreview(){
+    const block=$('postit-block');
+    const on=$('ev-postit-on').checked;
+    block.classList.toggle('muted',!on);
+    const title=$('ev-title').value.trim()||'(título)';
+    const date=$('ev-date').value||'(data)';
+    const time=$('ev-time').value||'--:--';
+    const cat=selectedCat?categoryFor(selectedCat).label:'Sem categoria';
+    const note=nbNoteSel?nbNoteSel.title+' · '+FOLDERS.find(f=>f.id===nbNoteSel.folder)?.tag:'';
+    const desc=$('ev-desc').value.trim();
+    let prev=`📌 ${title} · ${date} ${time} · ${cat}`;
+    if(note) prev+=`\n📄 ${note}`;
+    if(desc) prev+=`\n${desc}`;
+    $('postit-preview').textContent=on?prev:'Post-it desativado — ative para gerar um resumo automático no mural.';
+  }
+  $('ev-postit-on').addEventListener('change',updatePostitPreview);
+  $('ev-title').addEventListener('input',updatePostitPreview);
+  $('ev-date').addEventListener('input',updatePostitPreview);
+  $('ev-time').addEventListener('input',updatePostitPreview);
+  $('ev-desc').addEventListener('input',updatePostitPreview);
+  function syncNotificationControls(){
+    const enabled=$('ev-notif-on').checked;
+    $('notif-block').classList.toggle('notifications-off',!enabled);
+    $('ev-notify-before').disabled=!enabled;
+    $('ev-sound').disabled=!enabled;
+  }
+  async function requestNotificationPermission(){
+    if(!('Notification' in window)){
+      showToast('Notificações do navegador não são suportadas neste ambiente.');
+      return false;
+    }
+    if(Notification.permission==='granted')return true;
+    if(Notification.permission==='denied'){
+      showToast('Notificações bloqueadas pelo navegador. Altere a permissão do site para recebê-las.');
+      return false;
+    }
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted')showToast('Permita notificações do Conexo nas configurações do navegador.');
+    return permission==='granted';
+  }
+  let notificationAudioContext=null;
+  async function unlockNotificationAudio(){
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass)return;
+    try{
+      notificationAudioContext=notificationAudioContext||new AudioContextClass();
+      if(notificationAudioContext.state==='suspended')await notificationAudioContext.resume();
+    }catch(error){}
+  }
+  function playNotificationSound(){
+    if(!notificationAudioContext||notificationAudioContext.state!=='running')return;
+    const start=notificationAudioContext.currentTime;
+    [880,660].forEach((frequency,index)=>{
+      const oscillator=notificationAudioContext.createOscillator();
+      const gain=notificationAudioContext.createGain();
+      const onset=start+index*.18;
+      oscillator.type='sine';
+      oscillator.frequency.value=frequency;
+      gain.gain.setValueAtTime(.0001,onset);
+      gain.gain.exponentialRampToValueAtTime(.16,onset+.02);
+      gain.gain.exponentialRampToValueAtTime(.0001,onset+.14);
+      oscillator.connect(gain);
+      gain.connect(notificationAudioContext.destination);
+      oscillator.start(onset);
+      oscillator.stop(onset+.15);
+    });
+  }
+  function notificationKey(event,fireAt){
+    return `conexo-event-${event.id}-${fireAt}`;
+  }
+  function hasNotifiedEvent(key){
+    try{return JSON.parse(localStorage.getItem('conexo-notified-events')||'[]').includes(key)}catch(error){return false}
+  }
+  function rememberNotifiedEvent(key){
+    try{
+      const notified=JSON.parse(localStorage.getItem('conexo-notified-events')||'[]');
+      notified.push(key);
+      localStorage.setItem('conexo-notified-events',JSON.stringify(notified.slice(-100)));
+    }catch(error){}
+  }
+  function deliverEventNotification(event,key){
+    const settings=event.notif||{};
+    const time=new Date(`${event.date}T${event.time}:00`);
+    const timeLabel=time.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const body=`${event.title} começa às ${timeLabel}${event.desc?` · ${event.desc}`:''}`;
+    if('Notification' in window&&Notification.permission==='granted'){
+      const notification=new Notification('Lembrete do Conexo',{
+        body,
+        tag:key,
+        silent:!settings.sound
+      });
+      notification.onclick=()=>{
+        window.focus();
+        openEventDrawer(event);
+        notification.close();
+      };
+    }else{
+      showToast(`Lembrete: ${event.title} às ${timeLabel}`);
+    }
+    if(settings.sound)playNotificationSound();
+    rememberNotifiedEvent(key);
+  }
+  function checkEventNotifications(){
+    const now=Date.now();
+    events.forEach(event=>{
+      const settings=event.notif||{};
+      if(!settings.on)return;
+      const eventTime=new Date(`${event.date}T${event.time}:00`).getTime();
+      if(!Number.isFinite(eventTime)||eventTime<=now)return;
+      const before=Number(settings.before);
+      const fireAt=eventTime-(Number.isFinite(before)?before:10)*60000;
+      const key=notificationKey(event,fireAt);
+      if(fireAt<=now&&!hasNotifiedEvent(key))deliverEventNotification(event,key);
+    });
+  }
+  $('ev-notif-on').addEventListener('change',async()=>{
+    syncNotificationControls();
+    if($('ev-notif-on').checked)await requestNotificationPermission();
+    checkEventNotifications();
+  });
+  $('ev-sound').addEventListener('change',unlockNotificationAudio);
+  syncNotificationControls();
+
+  function renderCatRow(){
+    const row=$('cat-row');
+    row.replaceChildren();
+    Object.entries(CATEGORIES).forEach(([key,category])=>{
+      const pick=document.createElement('button');
+      pick.type='button';
+      pick.className='cat-pick'+(key===selectedCat?' active':'');
+      pick.dataset.cat=key;
+      pick.style.setProperty('--cat-color',category.color);
+      pick.style.setProperty('--cat-soft',category.soft);
+      const dot=document.createElement('span');
+      dot.className='cat-dot';
+      const label=document.createElement('span');
+      label.textContent=category.label;
+      pick.append(dot,label);
+      pick.addEventListener('click',()=>{selectedCat=key;renderCatRow();updatePostitPreview();});
+      row.appendChild(pick);
+    });
+  }
+
+  $('open-category-modal').addEventListener('click',()=>{
+    openModal('modal-category');
+    $('category-name').focus();
+  });
+
+  $('form-category').addEventListener('submit',async event=>{
+    event.preventDefault();
+    const response=await fetch('/api/categories/',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken()},
+      body:JSON.stringify({name:$('category-name').value,color:$('category-color').value})
+    });
+    const data=await response.json();
+    if(!response.ok){showToast(data.error||'Não foi possível criar a categoria.');return;}
+    const category=data.category;
+    CATEGORIES[category.id]={label:category.label,color:category.color,soft:`color-mix(in srgb, ${category.color} 16%, transparent)`,custom:true};
+    activeFilters.add(category.id);
+    selectedCat=category.id;
+    renderCatRow();
+    renderLegend();
+    updatePostitPreview();
+    closeModal('modal-category');
+    $('form-category').reset();
+    $('category-color').value='#14B8A6';
+  });
+
+  function renderNoteBrowser(){
+    const list=$('nb-list');
+    const breadcrumb=$('nb-breadcrumb');
+    list.innerHTML='';
+    if(nbLevel==='folders'){
+      breadcrumb.innerHTML='<span>Notas › Escolher pasta</span>';
+      if(FOLDERS.length===0){
+        list.innerHTML='<div class="nb-item">Crie uma pasta na tela de Notas para vincular uma nota.</div>';
+        return;
+      }
+      FOLDERS.forEach(f=>{
+        const item=document.createElement('div');
+        item.className='nb-item folder';
+        item.style.setProperty('--c1',f.c1); item.style.setProperty('--c2',f.c2);
+        item.innerHTML=`
+          <div class="nb-ic">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="nb-name">${f.name}</div>
+          <div class="nb-count">${f.count} notas</div>
+        `;
+        item.onclick=()=>{ nbFolderSel=f.id; nbLevel='notes'; renderNoteBrowser(); };
+        list.appendChild(item);
+      });
+    } else {
+      const folder=FOLDERS.find(f=>f.id===nbFolderSel);
+      breadcrumb.innerHTML=`<button id="nb-back">Notas</button><span class="sep">›</span><span>${folder.name}</span>`;
+      $('nb-back').onclick=()=>{ nbLevel='folders'; nbFolderSel=null; renderNoteBrowser(); };
+      const notes=NOTES_BY_FOLDER[folder.id]||[];
+      notes.forEach(n=>{
+        const item=document.createElement('div');
+        item.className='nb-item note';
+        const isSel=nbNoteSel && nbNoteSel.folder===folder.id && nbNoteSel.title===n.title;
+        if(isSel) item.classList.add('active');
+        item.style.setProperty('--cat-color','var(--primary)');
+        item.style.setProperty('--cat-soft','var(--ring)');
+        item.innerHTML=`
+          <div class="nb-ic">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          </div>
+          <div class="nb-name">${n.t}</div>
+          <div class="nb-count">${folder.tag}</div>
+        `;
+        item.onclick=()=>{
+          nbNoteSel={folder:folder.id,title:n.t};
+          updateNbSelected();
+          renderNoteBrowser();
+        };
+        list.appendChild(item);
+      });
+    }
+  }
+
+  function updateNbSelected(){
+    const sel=$('nb-selected');
+    if(nbNoteSel){
+      const folder=FOLDERS.find(f=>f.id===nbNoteSel.folder);
+      $('nb-selected-name').textContent=nbNoteSel.title;
+      $('nb-selected-tag').textContent=folder?folder.tag:'';
+      sel.classList.add('show');
+    } else {
+      sel.classList.remove('show');
+    }
+  }
+  $('nb-clear').onclick=()=>{ nbNoteSel=null; updateNbSelected(); renderNoteBrowser(); };
+
+  /* ===== Submit do form ===== */
+  $('form-event').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const generatePostit=$('ev-postit-on').checked;
+    const newEv={
+      id:editingId||Date.now(),
+      title:$('ev-title').value.trim(),
+      date:$('ev-date').value,
+      time:$('ev-time').value,
+      cat:selectedCat,
+      desc:$('ev-desc').value.trim(),
+      notif:{
+        on:$('ev-notif-on').checked,
+        before:parseInt($('ev-notify-before').value,10),
+        sound:$('ev-sound').checked
+      },
+      note:nbNoteSel?{...nbNoteSel}:null,
+      postit:generatePostit
+    };
+    if(!newEv.title){showToast('⚠️ Dê um título ao evento');return;}
+    try{
+      if(newEv.notif.on&&'Notification' in window&&Notification.permission==='default')await requestNotificationPermission();
+      if(newEv.notif.sound)await unlockNotificationAudio();
+      const response=await fetch(editingId?'/api/events/'+editingId+'/':'/api/events/',{method:editingId?'PATCH':'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken()},body:JSON.stringify(newEv)});
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.error||'Não foi possível salvar o evento.');
+      if(editingId)events=events.map(item=>item.id===editingId?result.event:item);
+      else events.push(result.event);
+      showToast(editingId?'✅ Evento atualizado':'✅ Evento criado');
+    }catch(error){showToast(error.message);return;}
+    closeModal('modal-event');
+    // Sobe para a data do evento e re-renderiza
+    selectedDate=new Date(newEv.date+'T00:00');
+    viewDate=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);
+    renderLegend(); renderCalendar(); renderDayList(); renderUpcoming();
+    checkEventNotifications();
+  });
+
+  /* ===== Botões ===== */
+  $('fab-add').onclick=()=>openEventModal();
+  $('add-on-day').onclick=()=>openEventModal();
+  $('btn-today').onclick=()=>{
+    viewDate=new Date(TODAY.getFullYear(),TODAY.getMonth(),1);
+    selectedDate=new Date(TODAY);
+    renderCalendar(); renderDayList();
+  };
+  $('prev-month').onclick=()=>{
+    viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1,1);
+    renderCalendar();
+  };
+  $('next-month').onclick=()=>{
+    viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+1,1);
+    renderCalendar();
+  };
+
+  /* ===== Atalhos ===== */
+  document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+    if(e.key==='n'||e.key==='N'){e.preventDefault();openEventModal();}
+    if(e.key==='ArrowLeft'&&!e.ctrlKey&&!e.metaKey){$('prev-month').click();}
+    if(e.key==='ArrowRight'&&!e.ctrlKey&&!e.metaKey){$('next-month').click();}
+  });
+
+  /* ===== Itens futuros na nav ===== */
+  document.querySelectorAll('.nav-item[data-future]').forEach(item=>{
+    item.addEventListener('click',e=>{
+      e.preventDefault();
+      showToast(`🚧 Tela "${item.dataset.future}" ainda em construção`);
+    });
+  });
+
+  /* ===== Init ===== */
+  applyFontScale(); // aplica tamanho de fonte persistido
+  renderLegend();
+  renderUpcoming();
+  renderCalendar();
+  renderDayList();
+  checkEventNotifications();
+  setInterval(checkEventNotifications,15000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkEventNotifications()});
+  window.addEventListener('resize',()=>{renderCalendar();renderDayList();renderUpcoming();});
+
+  /* ===== Suporte a retorno dos Post-its (?evento=ID) — abre o drawer do evento automaticamente ===== */
+  (function(){
+    const params=new URLSearchParams(window.location.search);
+    const evId=params.get('evento');
+    if(!evId) return;
+    const ev=events.find(e=>String(e.id)===String(evId));
+    if(ev){
+      // Navega até o mês do evento e seleciona o dia
+      const evDate=new Date(ev.date+'T00:00');
+      viewDate=new Date(evDate.getFullYear(),evDate.getMonth(),1);
+      selectedDate=new Date(evDate);
+      renderCalendar(); renderDayList(); renderUpcoming();
+      setTimeout(()=>openEventDrawer(ev),300);
+    }
+  })();
+</script>
+</body>
+</html>

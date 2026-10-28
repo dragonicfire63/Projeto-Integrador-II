@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conexo — Login</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cg%20stroke='%234F46E5'%20stroke-width='6'%20stroke-linecap='round'%3E%3Cpath%20d='M50%2050L69%2031M50%2050L31%2031M50%2050L31%2069M50%2050L69%2069'/%3E%3C/g%3E%3Cg%20fill='%234F46E5'%3E%3Ccircle%20cx='70'%20cy='30'%20r='8'/%3E%3Ccircle%20cx='30'%20cy='30'%20r='8'/%3E%3Ccircle%20cx='30'%20cy='70'%20r='8'/%3E%3Ccircle%20cx='70'%20cy='70'%20r='8'/%3E%3Ccircle%20cx='50'%20cy='50'%20r='10.5'/%3E%3C/g%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  /* Aplica o tema antes da página renderizar (evita "flash" de tela errada) */
+  (function(){
+    try{
+      const t=localStorage.getItem('theme');
+      if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))
+        document.documentElement.setAttribute('data-theme','dark');
+    }catch(e){}
+  })();
+</script>
+<style>
+  :root{
+    --primary:#4F46E5; --primary-2:#7C3AED; --link:#4F46E5;
+    --ink:#1E1B4B; --muted:#6B7194; --border:#E4E4F4;
+    --bg-gradient:linear-gradient(150deg,#EEF2FF 0%,#FDF4FF 55%,#EEF2FF 100%);
+    --surface:#fff; --kicker-bg:#EEF2FF; --input-bg:#fff;
+    --art-bg:#EEF2FF; --art-floor:#E0E7FF; --art-line:#C7D2FE;
+    --blob-1:#C7D2FE; --blob-2:#DDD6FE; --blob-opacity:.55;
+    --card-shadow:0 24px 48px -20px rgba(30,27,75,.18);
+    --ring:rgba(79,70,229,.12);
+    --toast-bg:#1E1B4B; --toast-text:#fff;
+    --outline-bg:#fff; --outline-hover:#F5F5FF;
+    --close-bg:#F1F1FA; --close-hover:#E4E4F4;
+    --help-bg:rgba(255,255,255,.7);
+  }
+  [data-theme="dark"]{
+    --primary:#6366F1; --primary-2:#8B5CF6; --link:#A5B4FC;
+    --ink:#F1F0FF; --muted:#A5A3C4; --border:#312F55;
+    --bg-gradient:linear-gradient(150deg,#12112A 0%,#191634 55%,#12112A 100%);
+    --surface:#1D1B38; --kicker-bg:#26244A; --input-bg:#26244A;
+    --art-bg:#262450; --art-floor:#1B1938; --art-line:#4A4780;
+    --blob-1:#3730A3; --blob-2:#5B21B6; --blob-opacity:.3;
+    --card-shadow:0 24px 48px -20px rgba(0,0,0,.55);
+    --ring:rgba(129,140,248,.28);
+    --toast-bg:#F1F0FF; --toast-text:#1E1B4B;
+    --outline-bg:#1D1B38; --outline-hover:#26244A;
+    --close-bg:#26244A; --close-hover:#312F55;
+    --help-bg:rgba(29,27,56,.7);
+    color-scheme:dark;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Poppins',sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; flex-direction:column; overflow-x:hidden;
+    background:var(--bg-gradient);
+    transition:background .35s ease,color .35s ease;
+  }
+  .blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:var(--blob-opacity);z-index:-1;pointer-events:none;transition:background .35s,opacity .35s}
+  .blob-1{width:420px;height:420px;background:var(--blob-1);top:-120px;right:-80px}
+  .blob-2{width:360px;height:360px;background:var(--blob-2);bottom:-100px;left:-80px}
+
+  /* ===== Botão de tema ===== */
+  #theme-toggle{
+    position:fixed;top:20px;right:20px;z-index:40;
+    width:44px;height:44px;border-radius:50%;cursor:pointer;
+    border:1.5px solid var(--border);background:var(--surface);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .2s,border-color .2s,background .35s,color .35s;
+  }
+  #theme-toggle:hover{transform:scale(1.08) rotate(15deg);border-color:var(--primary)}
+  .icon-sun{display:none}
+  [data-theme="dark"] .icon-sun{display:block}
+  [data-theme="dark"] .icon-moon{display:none}
+
+  main{flex:1;width:100%;max-width:880px;margin:0 auto;padding:40px 24px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+  /* ===== Marca: wordmark com logo no lugar do X ===== */
+  .lockup{text-align:center;margin-bottom:30px}
+  .wordmark{
+    font-size:clamp(2.3rem,6vw,3rem);font-weight:800;letter-spacing:-.03em;
+    color:var(--ink);line-height:1.15;white-space:nowrap;transition:color .35s;
+  }
+  .xmark{width:.8em;height:.8em;vertical-align:-.13em;margin:0 .045em}
+  .gx-a{stop-color:#4F46E5} .gx-b{stop-color:#9333EA}
+  [data-theme="dark"] .gx-a{stop-color:#818CF8}
+  [data-theme="dark"] .gx-b{stop-color:#A78BFA}
+  .gx-a,.gx-b{transition:stop-color .35s}
+  .tagline{color:var(--muted);font-size:.95rem;margin-top:6px}
+
+  /* ===== Card ===== */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:24px;width:100%;
+    box-shadow:var(--card-shadow);
+    display:grid;grid-template-columns:1.05fr .95fr;gap:24px;align-items:center;padding:44px 48px;
+    transition:background .35s ease,border-color .35s ease}
+  .kicker{display:inline-flex;align-items:center;gap:6px;background:var(--kicker-bg);color:var(--link);
+    font-size:.8rem;font-weight:600;padding:6px 14px;border-radius:999px;margin-bottom:14px}
+  .card h2{font-size:1.45rem;font-weight:700;margin-bottom:10px;letter-spacing:-.3px}
+  .card p{color:var(--muted);line-height:1.7;font-size:.95rem}
+  .features{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--kicker-bg);color:var(--link);
+    font-size:.8rem;font-weight:600;padding:7px 13px;border-radius:999px;transition:background .35s,color .35s}
+  .chip svg{flex-shrink:0}
+  .art{display:flex;justify-content:center}
+  .art svg{width:100%;max-width:360px;height:auto;animation:float 5s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  @media (prefers-reduced-motion:reduce){.art svg{animation:none}}
+
+  /* Estilos da ilustração (adaptáveis ao tema) */
+  .art-bg{fill:var(--art-bg)} .art-floor{fill:var(--art-floor)}
+  .art-c{stroke:var(--art-line);stroke-width:2.2;fill:none;stroke-linecap:round}
+  .art-s{stroke:var(--art-line);stroke-width:1.6;fill:none;stroke-linecap:round;opacity:.85}
+  .art-d{stroke:var(--art-line);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-dasharray:3 7;opacity:.8}
+  .art-halo{stroke:var(--art-line);fill:none;stroke-width:1.5;stroke-dasharray:2 6;opacity:.7}
+  .art-label{font-family:'Poppins',sans-serif;font-size:11.5px;font-weight:600;fill:var(--muted)}
+  .art-spark{fill:var(--link);opacity:.5}
+
+  /* ===== Botões ===== */
+  .actions{display:grid;gap:12px;width:100%;max-width:320px;margin-top:28px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 24px;border-radius:14px;font:inherit;font-weight:600;font-size:1rem;
+    cursor:pointer;border:none;transition:transform .18s,box-shadow .18s,background .35s,color .35s,border-color .35s}
+  .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+    box-shadow:0 14px 28px -10px rgba(79,70,229,.55)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 18px 32px -10px rgba(79,70,229,.65)}
+  .btn-outline{background:var(--outline-bg);color:var(--link);border:1.5px solid var(--border)}
+  .btn-outline:hover{background:var(--outline-hover);border-color:var(--primary);transform:translateY(-2px)}
+  .terms{font-size:.75rem;color:var(--muted);text-align:center;margin-top:6px}
+  .terms a{color:var(--link);font-weight:600;text-decoration:none}
+
+  /* ===== Rodapé ===== */
+  footer{width:100%;max-width:880px;margin:0 auto;padding:0 24px 28px;display:flex}
+  .help{display:inline-flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none;
+    font-size:.9rem;font-weight:500;padding:10px 18px;border-radius:999px;
+    border:1.5px solid var(--border);background:var(--help-bg);transition:.2s}
+  .help:hover{color:var(--link);border-color:var(--primary)}
+
+  /* ===== Modais ===== */
+  .overlay{position:fixed;inset:0;background:rgba(10,10,25,.5);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+    opacity:0;pointer-events:none;transition:.25s}
+  .overlay.open{opacity:1;pointer-events:auto}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:400px;position:relative;
+    box-shadow:0 30px 60px -15px rgba(0,0,0,.4);transform:translateY(16px) scale(.97);transition:.25s,background .35s,border-color .35s}
+  .overlay.open .modal{transform:none}
+  .modal h2{font-size:1.4rem;font-weight:700}
+  .modal-sub{color:var(--muted);font-size:.9rem;margin:4px 0 20px}
+  .modal-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;
+    border:none;background:var(--close-bg);color:var(--muted);font-size:1.2rem;cursor:pointer;transition:.2s}
+  .modal-close:hover{background:var(--close-hover);color:var(--ink)}
+  .field{margin-bottom:16px}
+  .field label{font-size:.85rem;font-weight:600}
+  .field input{width:100%;padding:12px 14px;margin-top:6px;border:1.5px solid var(--border);
+    border-radius:12px;font:inherit;background:var(--input-bg);color:var(--ink);transition:.2s,background .35s,border-color .35s}
+  .field input::placeholder{color:var(--muted);opacity:.7}
+  .field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--ring)}
+  .modal-switch{font-size:.85rem;text-align:center;margin-top:16px;color:var(--muted)}
+  .modal-switch a{color:var(--link);font-weight:600;text-decoration:none}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--toast-bg);color:var(--toast-text);padding:12px 22px;border-radius:999px;font-size:.9rem;
+    opacity:0;transition:.3s,background .35s,color .35s;z-index:60;box-shadow:0 12px 30px -8px rgba(0,0,0,.4)}
+  #toast.show{transform:translateX(-50%);opacity:1}
+
+  @media (max-width:760px){
+    main{padding:32px 18px}
+    .card{grid-template-columns:1fr;padding:28px;gap:8px}
+    .art{order:-1}
+    .art svg{max-width:240px}
+    .actions{max-width:none}
+  }
+</style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- Botão de tema -->
+  <button id="theme-toggle" onclick="toggleTheme()" aria-label="Alternar entre modo claro e escuro" title="Modo claro/escuro">
+    <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+    </svg>
+  </button>
+
+  <main>
+    <!-- ===== Marca: o logo é o X de "conexo" ===== -->
+    <div class="lockup">
+      <h1 class="wordmark" aria-label="Conexo">cone<svg class="xmark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="gx" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" class="gx-a"/><stop offset="1" class="gx-b"/>
+          </linearGradient>
+        </defs>
+        <!-- halo orbital ao redor do centro -->
+        <circle cx="50" cy="50" r="16.5" fill="none" stroke="url(#gx)" stroke-width="3" stroke-dasharray="3 5" stroke-linecap="round" opacity=".55"/>
+        <!-- braços do X (as conexões) -->
+        <g stroke="url(#gx)" stroke-width="5.5" stroke-linecap="round">
+          <path d="M50 50L69 31M50 50L31 31M50 50L31 69M50 50L69 69"/>
+        </g>
+        <!-- pontos conectados ao centro -->
+        <g fill="url(#gx)">
+          <circle cx="70" cy="30" r="8"/><circle cx="30" cy="30" r="8"/>
+          <circle cx="30" cy="70" r="8"/><circle cx="70" cy="70" r="8"/>
+        </g>
+        <!-- sub-conexões -->
+        <g fill="url(#gx)" opacity=".8">
+          <circle cx="84" cy="38" r="4.5"/><circle cx="62" cy="16" r="4.5"/>
+          <circle cx="16" cy="38" r="4.5"/><circle cx="38" cy="16" r="4.5"/>
+          <circle cx="16" cy="62" r="4.5"/><circle cx="38" cy="84" r="4.5"/>
+          <circle cx="84" cy="62" r="4.5"/><circle cx="62" cy="84" r="4.5"/>
+        </g>
+        <!-- centro: você -->
+        <circle cx="50" cy="50" r="10.5" fill="url(#gx)"/>
+      </svg>o</h1>
+      <p class="tagline">Você no centro de tudo o que importa.</p>
+    </div>
+
+    <!-- ===== Card de boas-vindas ===== -->
+    <section class="card">
+      <div>
+        <span class="kicker">👋 Bem-vindo(a)!</span>
+        <h2>Organize cada área da sua vida</h2>
+        <p>Crie notas, organize com tags e pastas, planeje pela agenda e conte com backup automático. No Conexo, você está no centro — e tudo se conecta ao seu redor.</p>
+        <div class="features">
+          <span class="chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+            Notas
+          </span>
+          <span class="chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            Agenda
+          </span>
+          <span class="chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5"/></svg>
+            Tags
+          </span>
+          <span class="chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            Pastas
+          </span>
+          <span class="chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16l-4-4-4 4M12 12v9"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            Backup
+          </span>
+        </div>
+      </div>
+      <div class="art">
+        <!-- Ilustração: você no centro, áreas da vida conectadas -->
+        <svg viewBox="0 0 340 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustração de uma rede de conexões: você no centro e áreas da vida ao redor">
+          <defs>
+            <linearGradient id="gCenter" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#4F46E5"/><stop offset="1" stop-color="#7C3AED"/>
+            </linearGradient>
+          </defs>
+          <circle class="art-bg" cx="170" cy="150" r="118"/>
+          <ellipse class="art-floor" cx="170" cy="264" rx="92" ry="11"/>
+
+          <!-- conexões -->
+          <path class="art-c" d="M170 150L251 124M170 150L170 65M170 150L89 124M170 150L120 219M170 150L220 219"/>
+          <path class="art-s" d="M170 65L217 49M170 65L123 49M251 124L251 74M251 124L280 164M89 124L89 74M89 124L60 164M120 219L80 200M120 219L150 251M220 219L190 251M220 219L260 200"/>
+          <path class="art-d" d="M170 65C205 75 235 90 251 124M89 124C105 160 112 190 120 219M251 124C262 158 240 190 220 219"/>
+
+          <!-- halo do centro -->
+          <circle class="art-halo" cx="170" cy="150" r="38"/>
+
+          <!-- centro: você -->
+          <circle cx="170" cy="150" r="27" fill="url(#gCenter)"/>
+          <circle cx="170" cy="142.5" r="7" fill="#fff"/>
+          <path d="M156 166c0-8 6.3-13.5 14-13.5s14 5.5 14 13.5z" fill="#fff"/>
+
+          <!-- áreas da vida -->
+          <g>
+            <circle cx="170" cy="65" r="15" fill="#F59E0B" opacity=".25"/><circle cx="170" cy="65" r="10.5" fill="#F59E0B"/><circle cx="170" cy="65" r="3" fill="#fff" opacity=".9"/>
+            <circle cx="251" cy="124" r="15" fill="#6366F1" opacity=".25"/><circle cx="251" cy="124" r="10.5" fill="#6366F1"/><circle cx="251" cy="124" r="3" fill="#fff" opacity=".9"/>
+            <circle cx="89" cy="124" r="15" fill="#22C55E" opacity=".25"/><circle cx="89" cy="124" r="10.5" fill="#22C55E"/><circle cx="89" cy="124" r="3" fill="#fff" opacity=".9"/>
+            <circle cx="120" cy="219" r="15" fill="#EC4899" opacity=".25"/><circle cx="120" cy="219" r="10.5" fill="#EC4899"/><circle cx="120" cy="219" r="3" fill="#fff" opacity=".9"/>
+            <circle cx="220" cy="219" r="15" fill="#8B5CF6" opacity=".25"/><circle cx="220" cy="219" r="10.5" fill="#8B5CF6"/><circle cx="220" cy="219" r="3" fill="#fff" opacity=".9"/>
+          </g>
+
+          <!-- sub-conexões -->
+          <g fill="var(--art-line)">
+            <circle cx="217" cy="49" r="3.5"/><circle cx="123" cy="49" r="3.5"/>
+            <circle cx="251" cy="74" r="3.5"/><circle cx="280" cy="164" r="3.5"/>
+            <circle cx="89" cy="74" r="3.5"/><circle cx="60" cy="164" r="3.5"/>
+            <circle cx="80" cy="200" r="3.5"/><circle cx="150" cy="251" r="3.5"/>
+            <circle cx="190" cy="251" r="3.5"/><circle cx="260" cy="200" r="3.5"/>
+          </g>
+
+          <!-- rótulos -->
+          <text class="art-label" x="170" y="34" text-anchor="middle">Trabalho</text>
+          <text class="art-label" x="267" y="127" text-anchor="start">Estudos</text>
+          <text class="art-label" x="73" y="127" text-anchor="end">Saúde</text>
+          <text class="art-label" x="90" y="248" text-anchor="middle">Casa</text>
+          <text class="art-label" x="250" y="248" text-anchor="middle">Lazer</text>
+
+          <!-- brilhos decorativos -->
+          <circle class="art-spark" cx="52" cy="62" r="3"/><circle class="art-spark" cx="298" cy="66" r="4"/><circle class="art-spark" cx="316" cy="152" r="2.5"/>
+        </svg>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="openModal('modal-login')">
+        Entrar
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="btn btn-outline" onclick="openModal('modal-signup')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+        Criar conta
+      </button>
+      <p class="terms">Ao continuar, você concorda com os <a href="#">Termos de Uso</a>.</p>
+    </div>
+  </main>
+
+  <footer>
+    <a href="#" class="help">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      Ajuda
+    </a>
+  </footer>
+
+  <!-- Modal: Entrar -->
+  <div class="overlay" id="modal-login">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" onclick="closeModal('modal-login')">&times;</button>
+      <h2>Entrar</h2>
+      <p class="modal-sub">Que bom te ver de novo! 👋</p>
+      <form id="form-login">
+        <div class="field">
+          <label for="login-email">E-mail</label>
+          <input id="login-email" type="email" placeholder="voce@email.com" required>
+        </div>
+        <div class="field">
+          <label for="login-senha">Senha</label>
+          <input id="login-senha" type="password" placeholder="Sua senha" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Entrar</button>
+      </form>
+      <p class="modal-switch">Não tem uma conta? <a href="#" onclick="switchModal('modal-login','modal-signup')">Criar conta</a></p>
+    </div>
+  </div>
+
+  <!-- Modal: Criar conta -->
+  <div class="overlay" id="modal-signup">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" onclick="closeModal('modal-signup')">&times;</button>
+      <h2>Criar conta</h2>
+      <p class="modal-sub">Vamos começar sua jornada! 🚀</p>
+      <form id="form-signup">
+        <div class="field">
+          <label for="signup-nome">Nome</label>
+          <input id="signup-nome" type="text" placeholder="Seu nome" required>
+        </div>
+        <div class="field">
+          <label for="signup-email">E-mail</label>
+          <input id="signup-email" type="email" placeholder="voce@email.com" required>
+        </div>
+        <div class="field">
+          <label for="signup-senha">Senha</label>
+          <input id="signup-senha" type="password" placeholder="Crie uma senha" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Criar conta</button>
+      </form>
+      <p class="modal-switch">Já tem uma conta? <a href="#" onclick="switchModal('modal-signup','modal-login')">Entrar</a></p>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+<script>
+  /* ===== Tema claro/escuro ===== */
+  const root=document.documentElement;
+  const $=id=>document.getElementById(id);
+  function toggleTheme(){
+    const dark=root.getAttribute('data-theme')==='dark';
+    root.setAttribute('data-theme', dark?'light':'dark');
+    try{ localStorage.setItem('theme', dark?'light':'dark'); }catch(e){}
+  }
+
+  /* ===== Modais ===== */
+  function openModal(id){ document.getElementById(id).classList.add('open'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+  function switchModal(a,b){ closeModal(a); openModal(b); }
+
+  document.querySelectorAll('.overlay').forEach(o=>{
+    o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('open'); });
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape') document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));
+  });
+  function csrfToken(){return document.cookie.split('; ').find(row=>row.startsWith('csrftoken='))?.split('=')[1]||''}
+  async function sendAuth(form, endpoint, payload){
+    const response=await fetch(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken()},body:JSON.stringify(payload)});
+    const text=await response.text();
+    let data={};
+    if(text){
+      try{ data=JSON.parse(text); }
+      catch(error){
+        throw new Error('Resposta do servidor inválida. Tente novamente.');
+      }
+    }
+    if(!response.ok){
+      throw new Error(data?.error || 'Não foi possível entrar.');
+    }
+    if(!data || !data.redirect){
+      throw new Error('Resposta do servidor inválida.');
+    }
+    window.location.href=data.redirect;
+  }
+  $('form-login').addEventListener('submit',async e=>{
+    e.preventDefault();
+    try{await sendAuth(e.currentTarget,'/api/auth/login/',{email:$('login-email').value,password:$('login-senha').value})}
+    catch(error){showToast(error.message)}
+  });
+  $('form-signup').addEventListener('submit',async e=>{
+    e.preventDefault();
+    try{await sendAuth(e.currentTarget,'/api/auth/register/',{name:$('signup-nome').value,email:$('signup-email').value,password:$('signup-senha').value})}
+    catch(error){showToast(error.message)}
+  });
+  function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2600);
+  }
+</script>
+</body>
+</html>

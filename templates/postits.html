@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conexo — Post-its</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cg%20stroke='%234F46E5'%20stroke-width='6'%20stroke-linecap='round'%3E%3Cpath%20d='M50%2050L69%2031M50%2050L31%2031M50%2050L31%2069M50%2050L69%2069'/%3E%3C/g%3E%3Cg%20fill='%234F46E5'%3E%3Ccircle%20cx='70'%20cy='30'%20r='8'/%3E%3Ccircle%20cx='30'%20cy='30'%20r='8'/%3E%3Ccircle%20cx='30'%20cy='70'%20r='8'/%3E%3Ccircle%20cx='70'%20cy='70'%20r='8'/%3E%3Ccircle%20cx='50'%20cy='50'%20r='10.5'/%3E%3C/g%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  (function(){
+    try{
+      const t=localStorage.getItem('theme');
+      if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))
+        document.documentElement.setAttribute('data-theme','dark');
+    }catch(e){}
+    // Suporte a retorno do calendário: ?evento=<id>
+    // Será tratado depois que a página renderizar
+  })();
+</script>
+<style>
+  :root{
+    --primary:#4F46E5; --primary-2:#7C3AED; --link:#4F46E5;
+    --ink:#1E1B4B; --muted:#6B7194; --border:#E4E4F4;
+    --bg-gradient:linear-gradient(150deg,#EEF2FF 0%,#FDF4FF 55%,#EEF2FF 100%);
+    --surface:#fff; --kicker-bg:#EEF2FF; --input-bg:#fff;
+    --blob-1:#C7D2FE; --blob-2:#DDD6FE; --blob-opacity:.55;
+    --card-shadow:0 20px 40px -18px rgba(30,27,75,.15);
+    --ring:rgba(79,70,229,.12);
+    --toast-bg:#1E1B4B; --toast-text:#fff;
+    --close-bg:#F1F1FA; --close-hover:#E4E4F4;
+    --danger:#E11D48; --danger-soft:#FFF1F2; --danger-border:#FECDD3;
+    --gx-a:#4F46E5; --gx-b:#9333EA;
+    /* Categorias de evento (mesmas de calendario.html) */
+    --cat-pessoal:#F43F5E; --cat-trabalho:#0EA5E9; --cat-amigos:#F59E0B; --cat-aniversarios:#A855F7;
+    /* Post-it default (amarelo) */
+    --postit-bg:linear-gradient(160deg,#FEF9C3 0%,#FDE68A 100%); --postit-fg:#78350F; --postit-edge:#FCD34D;
+  }
+  [data-theme="dark"]{
+    --primary:#6366F1; --primary-2:#8B5CF6; --link:#A5B4FC;
+    --ink:#F1F0FF; --muted:#A5A3C4; --border:#312F55;
+    --bg-gradient:linear-gradient(150deg,#12112A 0%,#191634 55%,#12112A 100%);
+    --surface:#1D1B38; --kicker-bg:#26244A; --input-bg:#26244A;
+    --blob-1:#3730A3; --blob-2:#5B21B6; --blob-opacity:.3;
+    --card-shadow:0 20px 40px -18px rgba(0,0,0,.5);
+    --ring:rgba(129,140,248,.28);
+    --toast-bg:#F1F0FF; --toast-text:#1E1B4B;
+    --close-bg:#26244A; --close-hover:#312F55;
+    --danger:#FB7185; --danger-soft:rgba(244,63,94,.08); --danger-border:rgba(251,113,133,.35);
+    --gx-a:#818CF8; --gx-b:#A78BFA;
+    /* Post-it amarelo no escuro — levemente atenuado */
+    --postit-bg:linear-gradient(160deg,rgba(252,211,77,.22) 0%,rgba(245,158,11,.14) 100%); --postit-fg:#FCD34D; --postit-edge:rgba(252,211,77,.5);
+    color-scheme:dark;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Poppins',sans-serif;color:var(--ink);min-height:100vh;
+    display:flex;flex-direction:column;overflow-x:hidden;
+    background:var(--bg-gradient);
+    transition:background .35s ease,color .35s ease;
+  }
+  .blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:var(--blob-opacity);z-index:-1;pointer-events:none;transition:background .35s,opacity .35s}
+  .blob-1{width:420px;height:420px;background:var(--blob-1);top:-120px;right:-80px}
+  .blob-2{width:360px;height:360px;background:var(--blob-2);bottom:-100px;left:-80px}
+
+  /* ===== Topbar ===== */
+  .topbar{max-width:1080px;margin:0 auto;padding:20px 24px 0;width:100%;
+    display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .topbar-left{display:flex;align-items:center;gap:12px}
+  .icon-btn{width:42px;height:42px;border-radius:50%;cursor:pointer;flex-shrink:0;
+    border:1.5px solid var(--border);background:var(--surface);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;text-decoration:none;
+    transition:transform .2s,border-color .2s,background .35s,color .35s}
+  .icon-btn:hover{transform:scale(1.08);border-color:var(--primary);color:var(--link)}
+  .wordmark{display:flex;align-items:center;gap:2px;font-weight:800;font-size:1.3rem;letter-spacing:-.03em;color:var(--ink);text-decoration:none}
+  .xmark{width:.85em;height:.85em;margin:0 .04em}
+  .gx-a,.gx-b{transition:stop-color .35s}
+  .icon-sun{display:none}
+  [data-theme="dark"] .icon-sun{display:block}
+  [data-theme="dark"] .icon-moon{display:none}
+  .topbar{position:relative}
+  .app-logout-btn{position:absolute;right:76px;top:20px;height:42px;padding:0 13px;display:inline-flex;
+    align-items:center;justify-content:center;gap:7px;border:1.5px solid var(--border);border-radius:12px;
+    background:var(--surface);color:var(--muted);font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;transition:.2s}
+  .app-logout-btn:hover{color:var(--danger);border-color:var(--danger-border);background:var(--danger-soft)}
+  .app-logout-btn:disabled{opacity:.55;cursor:wait}
+  @media(max-width:480px){.app-logout-btn{right:72px;padding:0 10px}}
+
+  /* ===== App nav (4 itens, POST iT ativo) ===== */
+  .app-nav{max-width:1080px;margin:14px auto 0;padding:0 24px;width:100%}
+  .app-nav-inner{background:var(--surface);border:1px solid var(--border);border-radius:18px;
+    box-shadow:var(--card-shadow);padding:8px;display:flex;justify-content:space-around;gap:6px;
+    transition:background .35s,border-color .35s}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:11px 6px 9px;border-radius:12px;text-decoration:none;
+    color:var(--muted);font-size:.7rem;font-weight:600;letter-spacing:.06em;
+    cursor:pointer;transition:.2s;position:relative}
+  .nav-item svg{color:var(--muted);transition:color .2s}
+  .nav-item:hover{color:var(--ink);background:var(--kicker-bg)}
+  .nav-item:hover svg{color:var(--link)}
+  .nav-item.active{color:var(--danger);background:var(--danger-soft)}
+  .nav-item.active svg{color:var(--danger)}
+
+  /* ===== Cabeçalho ===== */
+  .page-head{max-width:1080px;width:100%;margin:0 auto;padding:22px 24px 0;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .page-head h1{font-size:clamp(1.6rem,3.5vw,2.1rem);font-weight:800;letter-spacing:-.4px}
+  .page-sub{color:var(--muted);font-size:.92rem;margin-top:2px}
+
+  /* Toolbar do mural: busca + filtros rápidos */
+  .mural-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .search-box{position:relative;display:flex;align-items:center;flex:1;min-width:200px;max-width:320px}
+  .search-box input{width:100%;padding:10px 14px 10px 38px;border-radius:13px;
+    border:1.5px solid var(--border);background:var(--surface);color:var(--ink);
+    font:inherit;font-size:.9rem;transition:.2s}
+  .search-box input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--ring)}
+  .search-box input::placeholder{color:var(--muted);opacity:.6}
+  .search-box .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);
+    color:var(--muted);pointer-events:none;display:flex}
+
+  main{flex:1;width:100%;max-width:1080px;margin:0 auto;padding:18px 24px 80px;position:relative}
+
+  /* Banner de retorno do evento (quando vem via ?evento=ID) */
+  .return-banner{background:var(--danger-soft);border:1px solid var(--danger-border);
+    border-radius:14px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;
+    gap:10px;color:var(--ink);font-size:.88rem;cursor:pointer;transition:.2s}
+  .return-banner:hover{background:var(--danger);color:#fff}
+  .return-banner svg{flex-shrink:0;color:var(--danger)}
+  .return-banner:hover svg{color:#fff}
+  .return-banner b{color:var(--danger);font-weight:700}
+  .return-banner:hover b{color:#fff}
+
+  /* ===== Mural: grade de cards ===== */
+  .mural{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .postit{
+    background:var(--postit-bg,var(--bg));color:var(--postit-fg,var(--fg));
+    border:1px solid var(--postit-edge,var(--edge));
+    border-radius:14px;padding:14px 14px 12px;cursor:pointer;
+    display:flex;flex-direction:column;gap:8px;min-height:170px;position:relative;
+    box-shadow:0 8px 18px -8px rgba(0,0,0,.2),0 2px 4px rgba(0,0,0,.08);
+    transition:transform .2s,box-shadow .2s;
+    overflow:visible; /* para o popover */
+  }
+  [data-theme="dark"] .postit{box-shadow:0 8px 18px -8px rgba(0,0,0,.45)}
+  .postit:hover{transform:translateY(-3px) rotate(-.6deg);box-shadow:0 16px 30px -10px rgba(0,0,0,.3),0 4px 8px rgba(0,0,0,.12)}
+  /* "Prender" o post-it com fita no topo */
+  .postit::before{content:'';position:absolute;top:-7px;left:50%;transform:translateX(-50%) rotate(-3deg);
+    width:46px;height:18px;background:rgba(255,255,255,.5);
+    background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,.3));
+    border:1px solid rgba(0,0,0,.05);border-radius:2px;
+    box-shadow:0 1px 3px rgba(0,0,0,.1);pointer-events:none}
+  [data-theme="dark"] .postit::before{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.08));border-color:rgba(255,255,255,.1)}
+  .postit-title{font-weight:700;font-size:1rem;letter-spacing:-.2px;line-height:1.25;
+    word-break:break-word;padding-right:18px}
+  .postit-body{font-size:.86rem;line-height:1.5;color:var(--postit-fg,var(--fg));opacity:.9;
+    word-break:break-word;flex:1;
+    display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+  .postit-foot{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:8px;
+    border-top:1px dashed var(--postit-edge,var(--edge));min-height:24px;align-items:center}
+  .postit-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;
+    background:rgba(255,255,255,.55);color:var(--postit-fg,var(--fg));font-size:.7rem;
+    font-weight:600;cursor:pointer;border:1px solid transparent;transition:.15s;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  [data-theme="dark"] .postit-chip{background:rgba(0,0,0,.25)}
+  .postit-chip:hover{background:#fff;color:#1E1B4B;transform:scale(1.04)}
+  [data-theme="dark"] .postit-chip:hover{background:rgba(255,255,255,.85);color:#1E1B4B}
+  .postit-chip.event-chip{background:rgba(225,29,72,.18);color:#9F1239;border-color:rgba(225,29,72,.3)}
+  [data-theme="dark"] .postit-chip.event-chip{background:rgba(251,113,133,.18);color:#FECDD3;border-color:rgba(251,113,133,.4)}
+  .postit-chip.event-chip:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+  .postit-meta{font-size:.66rem;color:var(--postit-fg,var(--fg));opacity:.6;align-self:flex-end;
+    margin-left:auto;display:inline-flex;align-items:center;gap:4px}
+  .postit-empty{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;
+    grid-column:1/-1;padding:48px 24px;text-align:center;color:var(--muted);
+    border:1.5px dashed var(--border);border-radius:18px;background:var(--surface)}
+  .postit-empty svg{opacity:.4}
+  .postit-empty b{color:var(--ink);font-size:1.05rem;margin-bottom:4px}
+  .postit-empty .btn-create{margin-top:10px;display:inline-flex;align-items:center;gap:6px;
+    padding:10px 18px;border-radius:12px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+    font:inherit;font-weight:600;font-size:.9rem;box-shadow:0 10px 22px -8px rgba(79,70,229,.55);transition:transform .18s}
+  .postit-empty .btn-create:hover{transform:translateY(-2px)}
+
+  /* Tag de origem (Calendário) no canto do post-it */
+  .postit-source{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;
+    background:rgba(225,29,72,.18);color:#9F1239;border-radius:999px;padding:2px 8px;
+    font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  [data-theme="dark"] .postit-source{background:rgba(251,113,133,.2);color:#FECDD3}
+
+  /* ===== Popover de preview da nota vinculada (hover) ===== */
+  .popover{position:fixed;z-index:70;max-width:280px;background:var(--surface);
+    border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 40px -12px rgba(0,0,0,.3);
+    padding:14px 16px;opacity:0;pointer-events:none;transform:translateY(4px);transition:.18s}
+  .popover.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+  .popover-title{font-weight:700;font-size:.92rem;margin-bottom:4px;display:flex;align-items:center;gap:6px;color:var(--ink)}
+  .popover-title svg{flex-shrink:0}
+  .popover-tag{font-size:.66rem;color:var(--muted);font-weight:600;
+    background:var(--kicker-bg);padding:2px 8px;border-radius:999px;letter-spacing:.04em}
+  .popover-location{font-size:.72rem;color:var(--muted);margin-top:7px;overflow-wrap:anywhere}
+  .popover-location[hidden]{display:none}
+  .popover-preview{font-size:.82rem;color:var(--muted);line-height:1.5;margin-top:8px;
+    padding-top:8px;border-top:1px dashed var(--border);
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .popover-go{margin-top:10px;display:inline-flex;align-items:center;gap:5px;color:var(--link);
+    font-size:.78rem;font-weight:600;text-decoration:none;cursor:pointer}
+  .popover-go:hover{text-decoration:underline}
+
+  /* ===== FAB + ===== */
+  .fab{position:fixed;bottom:24px;right:24px;width:58px;height:58px;border-radius:50%;border:none;
+    cursor:pointer;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 16px 32px -8px rgba(79,70,229,.55);z-index:40;
+    transition:transform .18s,box-shadow .18s}
+  .fab:hover{transform:translateY(-2px) rotate(90deg);box-shadow:0 22px 38px -8px rgba(79,70,229,.65)}
+  .fab:active{transform:translateY(0) rotate(90deg) scale(.95)}
+
+  /* ===== Modais ===== */
+  .overlay{position:fixed;inset:0;background:rgba(10,10,25,.5);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+    opacity:0;pointer-events:none;transition:.25s}
+  .overlay.open{opacity:1;pointer-events:auto}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;
+    width:100%;max-width:480px;position:relative;max-height:90vh;overflow-y:auto;
+    box-shadow:0 30px 60px -15px rgba(0,0,0,.4);transform:translateY(16px) scale(.97);transition:.25s}
+  .overlay.open .modal{transform:none}
+  .modal h2{font-size:1.3rem;font-weight:700;letter-spacing:-.2px}
+  .modal-sub{color:var(--muted);font-size:.86rem;margin:4px 0 18px}
+  .modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;
+    border:none;background:var(--close-bg);color:var(--muted);font-size:1.2rem;cursor:pointer;transition:.2s}
+  .modal-close:hover{background:var(--close-hover);color:var(--ink)}
+
+  .field{margin-bottom:14px}
+  .field label{font-size:.83rem;font-weight:600;display:block;margin-bottom:6px}
+  .field input,.field textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);
+    border-radius:11px;font:inherit;background:var(--input-bg);color:var(--ink);transition:.2s;font-size:.92rem}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--ring)}
+  .field textarea{resize:vertical;min-height:90px;font-family:inherit}
+
+  /* Browser de notas em 2 níveis + multi-seleção */
+  .note-browser{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;background:var(--input-bg)}
+  .nb-breadcrumb{display:flex;align-items:center;gap:6px;padding:9px 12px;
+    background:var(--kicker-bg);font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border)}
+  .nb-breadcrumb button{background:none;border:none;color:var(--link);font:inherit;font-weight:600;cursor:pointer;padding:2px 6px;border-radius:6px}
+  .nb-breadcrumb button:hover{text-decoration:underline}
+  .nb-breadcrumb .sep{color:var(--muted);opacity:.5}
+  .nb-list{max-height:200px;overflow-y:auto;padding:6px}
+  .nb-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;cursor:pointer;
+    transition:.15s;color:var(--ink);position:relative}
+  .nb-item:hover{background:var(--kicker-bg)}
+  .nb-item.selected{background:var(--cat-soft,var(--kicker-bg));font-weight:600}
+  .nb-item .nb-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    background:var(--kicker-bg);color:var(--link);flex-shrink:0}
+  .nb-item.folder .nb-ic{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff}
+  .nb-item .nb-name{flex:1;font-size:.86rem;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nb-item .nb-count{font-size:.74rem;color:var(--muted);font-weight:500}
+  .nb-item.folder .nb-count{color:var(--link)}
+  /* Checkbox de multi-seleção */
+  .nb-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;transition:.18s;background:var(--surface)}
+  .nb-item.selected .nb-check{background:var(--primary);border-color:var(--primary)}
+  .nb-check svg{opacity:0;transition:opacity .15s;color:#fff}
+  .nb-item.selected .nb-check svg{opacity:1}
+
+  /* Lista de vínculos selecionados */
+  .nb-selected-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .nb-selected-item{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:10px;
+    background:var(--kicker-bg);border:1px solid var(--border);font-size:.83rem}
+  .nb-selected-item .nb-ic{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+    color:#fff;flex-shrink:0;background:linear-gradient(135deg,var(--c1),var(--c2))}
+  .nb-selected-item .nb-ic.note{background:var(--kicker-bg);color:var(--link)}
+  .nb-selected-item .nb-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nb-selected-item .nb-tag{font-size:.66rem;color:var(--muted);font-weight:600;background:var(--surface);
+    padding:2px 7px;border-radius:999px}
+  .nb-selected-item .nb-rm{width:22px;height:22px;border-radius:50%;border:none;cursor:pointer;
+    background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:.15s}
+  .nb-selected-item .nb-rm:hover{background:var(--danger-soft);color:var(--danger)}
+
+  /* Preview da cor resultante do post-it */
+  .color-preview{margin-top:12px;display:flex;align-items:center;gap:10px;padding:10px 14px;
+    border-radius:11px;background:var(--kicker-bg);border:1px solid var(--border)}
+  .color-preview .swatch{width:32px;height:32px;border-radius:8px;flex-shrink:0;
+    background:var(--swatch-bg,linear-gradient(160deg,#FEF9C3,#FDE68A));
+    border:1px solid var(--swatch-edge,#FCD34D)}
+  .color-preview .lab{flex:1}
+  .color-preview .lab b{font-size:.86rem;font-weight:600;color:var(--ink);display:block}
+  .color-preview .lab small{font-size:.74rem;color:var(--muted)}
+  .color-preview .lab small .warn{color:var(--danger);font-weight:600}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 22px;border-radius:13px;font:inherit;font-weight:600;font-size:.95rem;
+    cursor:pointer;border:none;transition:transform .18s,box-shadow .18s,background .35s,color .35s,border-color .35s}
+  .btn-block{width:100%}
+  .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+    box-shadow:0 10px 22px -8px rgba(79,70,229,.55)}
+  .btn-primary:hover{transform:translateY(-2px)}
+  .btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--border)}
+  .btn-outline:hover{border-color:var(--primary);color:var(--link)}
+  .btn-danger{background:transparent;color:var(--danger);border:1.5px solid var(--danger-border)}
+  .btn-danger:hover{background:var(--danger);color:#fff}
+  .btn-row{display:flex;gap:10px;margin-top:18px}
+  .btn-row .btn{flex:1}
+
+  /* ===== Toast ===== */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--toast-bg);color:var(--toast-text);padding:12px 22px;border-radius:999px;
+    font-size:.9rem;opacity:0;transition:.3s,background .35s,color .35s;z-index:80;
+    box-shadow:0 12px 30px -8px rgba(0,0,0,.4);max-width:90vw;text-align:center}
+  #toast.show{transform:translateX(-50%);opacity:1}
+
+  /* ===== Footer ===== */
+  footer{width:100%;max-width:1080px;margin:0 auto;padding:0 24px 28px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .help{display:inline-flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none;
+    font-size:.88rem;font-weight:500;padding:9px 17px;border-radius:999px;
+    border:1.5px solid var(--border);background:var(--surface);transition:.2s}
+  .help:hover{color:var(--link);border-color:var(--primary)}
+  .version{color:var(--muted);font-size:.78rem}
+
+  /* ===== Responsivo ===== */
+  @media (max-width:1024px){ .mural{grid-template-columns:repeat(3,1fr)} }
+  @media (max-width:760px){ .mural{grid-template-columns:repeat(2,1fr);gap:12px} }
+  @media (max-width:640px){
+    .app-nav-inner{padding:6px;gap:2px}
+    .nav-item{font-size:.6rem;padding:9px 4px 7px;letter-spacing:.04em}
+    .nav-item svg{width:20px!important;height:20px!important}
+    .mural{grid-template-columns:1fr}
+    .modal{padding:22px}
+    .page-head{align-items:flex-start}
+    .fab{bottom:18px;right:18px;width:54px;height:54px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition-duration:.001s!important}
+  }
+</style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- ===== Topbar ===== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" type="button" data-app-back data-fallback="notas.html" aria-label="Voltar à página anterior" title="Voltar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <a class="wordmark" href="notas.html" aria-label="Conexo">cone<svg class="xmark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="16.5" fill="none" stroke="url(#gxTop)" stroke-width="3" stroke-dasharray="3 5" stroke-linecap="round" opacity=".55"/>
+        <g stroke="url(#gxTop)" stroke-width="5.5" stroke-linecap="round"><path d="M50 50L69 31M50 50L31 31M50 50L31 69M50 50L69 69"/></g>
+        <g fill="url(#gxTop)"><circle cx="70" cy="30" r="8"/><circle cx="30" cy="30" r="8"/><circle cx="30" cy="70" r="8"/><circle cx="70" cy="70" r="8"/></g>
+        <g fill="url(#gxTop)" opacity=".8"><circle cx="84" cy="38" r="4.5"/><circle cx="62" cy="16" r="4.5"/><circle cx="16" cy="38" r="4.5"/><circle cx="38" cy="16" r="4.5"/><circle cx="16" cy="62" r="4.5"/><circle cx="38" cy="84" r="4.5"/><circle cx="84" cy="62" r="4.5"/><circle cx="62" cy="84" r="4.5"/></g>
+        <circle cx="50" cy="50" r="10.5" fill="url(#gxTop)"/>
+        <defs><linearGradient id="gxTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="gx-a"/><stop offset="1" class="gx-b"/></linearGradient></defs>
+      </svg>o</a>
+    </div>
+    {% include "controle_sessao.html" %}
+    <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema" title="Modo claro/escuro">
+      <svg class="icon-moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+  </header>
+
+  <!-- ===== Navegação do app (4 itens, POST iT ativo) ===== -->
+  <nav class="app-nav" aria-label="Navegação principal">
+    <div class="app-nav-inner">
+      <a class="nav-item" href="notas.html">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6M9 13l2 2 4-4"/>
+          </svg>
+        </div>
+        <span>NOTAS</span>
+      </a>
+      <a class="nav-item" href="calendario.html">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+            <text x="12" y="20" text-anchor="middle" font-size="6.5" font-weight="700" fill="currentColor" stroke="none" font-family="Poppins,sans-serif">1</text>
+          </svg>
+        </div>
+        <span>CALENDARIO</span>
+      </a>
+      <a class="nav-item active" href="postits.html" aria-current="page">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="3" width="13" height="13" rx="1.5" transform="rotate(-6 10 9)"/>
+            <rect x="7" y="6" width="13" height="13" rx="1.5" transform="rotate(4 13 12)"/>
+            <path d="M11 11l3 3M14 11l-3 3" stroke-width="1.4" opacity=".7"/>
+          </svg>
+        </div>
+        <span>POST iT</span>
+      </a>
+      <a class="nav-item" href="configuracoes.html">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10L12 5 2 10l10 5 10-5z"/>
+            <path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+            <path d="M22 10v6"/>
+          </svg>
+        </div>
+        <span>CONTA</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===== Cabeçalho ===== -->
+  <div class="page-head">
+    <div>
+      <h1>Post-its</h1>
+      <p class="page-sub">Recados rápidos que conectam suas notas e eventos.</p>
+    </div>
+    <div class="mural-toolbar">
+      <div class="search-box">
+        <span class="ic">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </span>
+        <input type="text" id="search-input" placeholder="Buscar nos post-its..." aria-label="Buscar">
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- Banner de retorno do evento (mostrado quando vem de ?evento=ID) -->
+    <div class="return-banner" id="return-banner" style="display:none" onclick="goToEventFromBanner()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <span id="return-banner-text">Voltar ao evento no calendário</span>
+    </div>
+
+    <!-- Mural de post-its -->
+    <section class="mural" id="mural" aria-label="Mural de post-its"></section>
+  </main>
+
+  <!-- FAB + -->
+  <button class="fab" id="fab-add" aria-label="Criar novo post-it" title="Novo post-it (N)">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <footer>
+    <a href="#" class="help" onclick="event.preventDefault();showToast('Central de ajuda (demonstração)')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      Ajuda
+    </a>
+    <span class="version">Conexo · v1.0</span>
+  </footer>
+
+  <!-- ===== Modal: criar/editar post-it ===== -->
+  <div class="overlay" id="modal-postit">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" onclick="closeModal('modal-postit')" aria-label="Fechar">&times;</button>
+      <h2 id="postit-modal-title">Novo post-it</h2>
+      <p class="modal-sub">Anote um lembrete e vincule notas/pastas para acesso rápido.</p>
+      <form id="form-postit">
+        <div class="field">
+          <label for="pt-title">Título</label>
+          <input id="pt-title" type="text" placeholder="Ex.: Lembrar de revisar mitose" required maxlength="80">
+        </div>
+        <div class="field">
+          <label for="pt-body">Conteúdo</label>
+          <textarea id="pt-body" placeholder="Escreva aqui o recado..." maxlength="400"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Vínculos <span style="color:var(--muted);font-weight:400;font-size:.78rem">(notas e pastas — selecione vários)</span></label>
+          <div class="note-browser" id="note-browser">
+            <div class="nb-breadcrumb" id="nb-breadcrumb">
+              <span>Notas › Escolher pasta ou nota</span>
+            </div>
+            <div class="nb-list" id="nb-list"></div>
+          </div>
+          <div class="nb-selected-list" id="nb-selected-list"></div>
+        </div>
+
+        <!-- Preview da cor resultante -->
+        <div class="color-preview" id="color-preview">
+          <div class="swatch" id="color-swatch"></div>
+          <div class="lab">
+            <b id="color-lab-title">Cor do post-it</b>
+            <small id="color-lab-desc">Amarelo padrão — sem pasta vinculada</small>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-postit')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Popover de preview da nota vinculada ===== -->
+  <div class="popover" id="popover" role="tooltip">
+    <div class="popover-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      <span id="popover-title-text"></span>
+      <span class="popover-tag" id="popover-tag"></span>
+    </div>
+    <div class="popover-location" id="popover-location" hidden></div>
+    <div class="popover-preview" id="popover-preview"></div>
+    <a class="popover-go" id="popover-go" href="#">
+      Abrir nota
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+
+  <div id="toast"></div>
+  {% include "confirma_delete.html" %}
+
+{{ notes_json|json_script:"notes-data" }}
+{{ folders_json|json_script:"folders-data" }}
+<script>
+  const root=document.documentElement;
+  const $=id=>document.getElementById(id);
+  const NOTES_BY_FOLDER=JSON.parse($('notes-data').textContent);
+  const POSTIT_FOLDERS=JSON.parse($('folders-data').textContent).map(folder=>({
+    ...folder,
+    c1:folder.color_start,
+    c2:folder.color_end,
+    postitBg:`linear-gradient(160deg,${folder.color_start} 0%,${folder.color_end} 100%)`,
+    postitFg:'#1E1B4B',
+    postitEdge:folder.color_start
+  }));
+  const csrfToken=()=>document.cookie.split('; ').find(row=>row.startsWith('csrftoken='))?.split('=')[1]||'';
+
+  /* ===== Tema ===== */
+  function setTheme(t){root.setAttribute('data-theme',t);try{localStorage.setItem('theme',t)}catch(e){}}
+  function toggleTheme(){setTheme(root.getAttribute('data-theme')==='dark'?'light':'dark')}
+
+  /* ===== Modais / Toast ===== */
+  function openModal(id){$(id).classList.add('open')}
+  function closeModal(id){$(id).classList.remove('open')}
+  document.querySelectorAll('.overlay').forEach(o=>{
+    o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')});
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape')document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));
+  });
+  let toastTimer;
+  function showToast(msg){
+    const t=$('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+  }
+
+  const POSTIT_DEFAULT={postitBg:'linear-gradient(160deg,#FEF9C3 0%,#FDE68A 100%)',postitFg:'#78350F',postitEdge:'#FCD34D'};
+  function getFolderPostitStyle(folderId){
+    if(!folderId) return null;
+    const f=POSTIT_FOLDERS.find(x=>x.id===folderId);
+    if(!f) return null;
+    return {postitBg:f.postitBg,postitFg:f.postitFg,postitEdge:f.postitEdge};
+  }
+  function getDefaultPostitStyle(){
+    if(root.getAttribute('data-theme')==='dark'){
+      return {postitBg:'linear-gradient(160deg,rgba(252,211,77,.22) 0%,rgba(245,158,11,.14) 100%)',postitFg:'#FCD34D',postitEdge:'rgba(252,211,77,.5)'};
+    }
+    return POSTIT_DEFAULT;
+  }
+
+  /* ===== Notas por pasta (mockadas) — definidas em notas-mock.js ===== */
+  /* NOTES_BY_FOLDER e TOTAL_NOTAS vêm do script externo; FOLDERS local do postits
+     (acima) define as cores de postit específicas desta tela. */
+  function findNotePreview(folderId, title){
+    const arr=NOTES_BY_FOLDER[folderId]||[];
+    const n=arr.find(x=>x.t===title);
+    return n? (n.p||n.e) : '';
+  }
+  function findNote(folderId,title){
+    const arr=NOTES_BY_FOLDER[folderId]||[];
+    return arr.find(note=>(note.t||note.title)===title)||null;
+  }
+  function getFolderPath(folderId){
+    const path=[];
+    let folder=POSTIT_FOLDERS.find(item=>item.id===folderId);
+    while(folder){
+      path.unshift(folder.name);
+      folder=folder.parent?POSTIT_FOLDERS.find(item=>item.id===folder.parent):null;
+    }
+    return path.join(' / ');
+  }
+
+  /* ===== Eventos mockados (somente leitura — referência para voltar ao calendário) =====
+     Mantemos uma cópia local apenas para resolver o título ao exibir o chip "Evento X" no post-it.
+     Não usamos para criar/editar — o calendário.html é a fonte canônica dos eventos. */
+  let EVENTS_REF=[];
+  function findEventById(id){return EVENTS_REF.find(e=>String(e.id)===String(id))}
+
+  let manualPostits=[];
+  let calPostits=[];
+
+  async function loadPostits(){
+    const [postitResponse,eventResponse]=await Promise.all([fetch('/api/postits/'),fetch('/api/events/')]);
+    if(!postitResponse.ok||!eventResponse.ok){showToast('Não foi possível carregar seus dados.');return;}
+    const postitData=await postitResponse.json(),eventData=await eventResponse.json();
+    manualPostits=postitData.postits.filter(item=>item.source==='manual');
+    calPostits=postitData.postits.filter(item=>item.source==='calendar');
+    EVENTS_REF=eventData.events;
+  }
+
+  /* ===== Derivar cor do post-it ===== */
+  function derivePostitStyle(postit){
+    // 1. Se tem vínculo de pasta/nota, usa a cor da pasta do primeiro vínculo
+    if(postit.links && postit.links.length){
+      const first=postit.links[0];
+      const folderId=first.folderId;
+      const s=getFolderPostitStyle(folderId);
+      if(s) return s;
+    }
+    // 2. Se é de evento mas não tem pasta vinculada, mantém amarelo (consistente com calendário)
+    return getDefaultPostitStyle();
+  }
+
+  /* ===== Renderiza o mural ===== */
+  function renderMural(){
+    const mural=$('mural');
+    const q=($('search-input').value||'').toLowerCase().trim();
+    // Combina manual + calendar em uma só lista para render
+    const all=[...manualPostits,...calPostits];
+    let filtered=all;
+    if(q){
+      filtered=all.filter(p=>{
+        const inTitle=(p.title||'').toLowerCase().includes(q);
+        const inBody=(p.body||'').toLowerCase().includes(q);
+        const inLinks=(p.links||[]).some(l=>{
+          const folder=POSTIT_FOLDERS.find(f=>f.id===l.folderId);
+          return (l.title||'').toLowerCase().includes(q) || (folder?folder.name.toLowerCase().includes(q):false);
+        });
+        return inTitle||inBody||inLinks;
+      });
+    }
+    mural.innerHTML='';
+    if(filtered.length===0){
+      mural.innerHTML=`<div class="postit-empty">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="3" width="13" height="13" rx="1.5" transform="rotate(-6 10 9)"/>
+          <rect x="7" y="6" width="13" height="13" rx="1.5" transform="rotate(4 13 12)"/>
+        </svg>
+        <b>Nenhum post-it</b>
+        ${q?('Nenhum post-it encontrado para "'+q+'".'):'Crie seu primeiro post-it clicando no botão + ali embaixo.'}
+        ${!q?('<button class="btn-create" onclick="openPostitModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Criar post-it</button>'):''}
+      </div>`;
+      return;
+    }
+    filtered.forEach(p=>{
+      const style=derivePostitStyle(p);
+      const card=document.createElement('div');
+      card.className='postit';
+      // Aplica as variáveis CSS que o .postit usa (--postit-bg, --postit-fg, --postit-edge)
+      card.style.setProperty('--postit-bg',style.postitBg);
+      card.style.setProperty('--postit-fg',style.postitFg);
+      card.style.setProperty('--postit-edge',style.postitEdge);
+      // Tags de origem
+      let sourceBadge='';
+      if(p.source==='calendar'){
+        sourceBadge=`<span class="postit-source">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Calendário
+        </span>`;
+      } else if(p.eventId){
+        sourceBadge=`<span class="postit-source">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Evento
+        </span>`;
+      }
+      // Chips de vínculos
+      let chips='';
+      (p.links||[]).forEach(l=>{
+        const folder=POSTIT_FOLDERS.find(f=>f.id===l.folderId);
+        if(l.type==='folder'){
+          chips+=`<span class="postit-chip" data-link='${JSON.stringify(l)}' data-action="open-folder">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            ${folder?folder.name:'Pasta'}
+          </span>`;
+        } else if(l.type==='note'){
+          chips+=`<span class="postit-chip" data-link='${JSON.stringify(l)}' data-action="open-note" data-folder="${l.folderId}" data-title="${encodeURIComponent(l.title)}">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            ${l.title}
+          </span>`;
+        }
+      });
+      // Chip de evento (se houver)
+      if(p.eventId){
+        const ev=findEventById(p.eventId);
+        if(ev){
+          chips+=`<span class="postit-chip event-chip" data-event-id="${p.eventId}" data-action="open-event">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            ${ev.title}
+          </span>`;
+        }
+      }
+      // Meta (data de criação)
+      const created=new Date(p.createdAt||Date.now());
+      const meta=`<span class="postit-meta">${created.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</span>`;
+      // Compor card
+      card.innerHTML=`
+        ${sourceBadge}
+        <div class="postit-title">${escapeHtml(p.title||'(sem título)')}</div>
+        ${p.body?`<div class="postit-body">${escapeHtml(p.body)}</div>`:''}
+        <div class="postit-foot">${chips}${meta}</div>
+      `;
+      // Click no card → abre modal de edição (se manual) ou drawer de info (se de calendário)
+      card.addEventListener('click',e=>{
+        // Se clicou num chip, não abre o modal (o chip tem o próprio handler)
+        if(e.target.closest('.postit-chip')) return;
+        if(p.source==='calendar'){
+          showToast('📌 Post-it gerado pelo evento "'+(findEventById(p.eventId)?.title||'')+'". Edite pelo Calendário.');
+        } else {
+          openPostitModal(p);
+        }
+      });
+      mural.appendChild(card);
+    });
+    // Vincula handlers dos chips + popovers
+    bindChipEvents();
+  }
+
+  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+  /* ===== Eventos dos chips (clique + hover popover) ===== */
+  function bindChipEvents(){
+    document.querySelectorAll('.postit-chip').forEach(chip=>{
+      const action=chip.dataset.action;
+      if(action==='open-note'){
+        const folderId=chip.dataset.folder;
+        const title=decodeURIComponent(chip.dataset.title);
+        // Hover popover com preview
+        chip.addEventListener('mouseenter',e=>showNotePopover(e.target,folderId,title));
+        chip.addEventListener('mouseleave',scheduleHidePopover);
+        // Click abre a nota no editor
+        chip.addEventListener('click',e=>{
+          e.stopPropagation();
+          const note=findNote(folderId,title);
+          if(note)window.location.href='editor_nota.html?id='+encodeURIComponent(note.id);
+        });
+      } else if(action==='open-folder'){
+        chip.addEventListener('click',e=>{
+          e.stopPropagation();
+          // Abre notas.html (lista de pastas)
+          window.location.href='notas.html';
+        });
+        chip.addEventListener('mouseleave',hidePopover);
+      } else if(action==='open-event'){
+        const evId=chip.dataset.eventId;
+        chip.addEventListener('click',e=>{
+          e.stopPropagation();
+          // Vai para o calendário e marca para abrir o drawer do evento
+          window.location.href='calendario.html?evento='+evId;
+        });
+        chip.addEventListener('mouseleave',hidePopover);
+      }
+    });
+  }
+
+  /* ===== Popover de preview da nota ===== */
+  let popoverTimer=null;
+  function scheduleHidePopover(){
+    clearTimeout(popoverTimer);
+    popoverTimer=setTimeout(hidePopover,180);
+  }
+  $('popover').addEventListener('mouseenter',()=>clearTimeout(popoverTimer));
+  $('popover').addEventListener('mouseleave',hidePopover);
+  function showNotePopover(target,folderId,title){
+    hidePopover();
+    const preview=findNotePreview(folderId,title);
+    const folder=POSTIT_FOLDERS.find(f=>f.id===folderId);
+    const note=findNote(folderId,title);
+    const path=getFolderPath(folderId);
+    $('popover-title-text').textContent=title;
+    $('popover-tag').textContent=folder?folder.tag:'';
+    $('popover-location').textContent=path?'Localização: '+path:'';
+    $('popover-location').hidden=!path;
+    $('popover-preview').textContent=preview||'(Sem conteúdo de prévia disponível)';
+    $('popover-go').href=note?'editor_nota.html?id='+encodeURIComponent(note.id):'#';
+    $('popover-go').hidden=!note;
+    // Posiciona
+    const r=target.getBoundingClientRect();
+    const pop=$('popover');
+    pop.classList.add('show');
+    const popRect=pop.getBoundingClientRect();
+    let left=r.left;
+    if(left+popRect.width>window.innerWidth-10) left=window.innerWidth-popRect.width-10;
+    let top=r.bottom+8;
+    if(top+popRect.height>window.innerHeight-10) top=r.top-popRect.height-8;
+    pop.style.left=left+'px';
+    pop.style.top=top+'px';
+  }
+  function hidePopover(){
+    clearTimeout(popoverTimer);
+    $('popover').classList.remove('show');
+  }
+  document.addEventListener('scroll',hidePopover,true);
+
+  /* ===== Modal de criar/editar post-it ===== */
+  let editingId=null;
+  let nbLevel='folders';
+  let nbFolderSel=null; // pasta atualmente aberta no browser
+  let selectedLinks=[]; // vínculos selecionados (multi)
+  let selectedEventId=null;
+
+  function openPostitModal(p=null){
+    editingId=p?p.id:null;
+    $('postit-modal-title').textContent=p?'Editar post-it':'Novo post-it';
+    if(p){
+      $('pt-title').value=p.title||'';
+      $('pt-body').value=p.body||'';
+      selectedLinks=(p.links||[]).map(l=>({...l}));
+      selectedEventId=p.eventId||null;
+    } else {
+      $('form-postit').reset();
+      selectedLinks=[];
+      selectedEventId=null;
+    }
+    nbLevel='folders'; nbFolderSel=null;
+    renderNoteBrowser();
+    renderSelectedLinks();
+    updateColorPreview();
+    openModal('modal-postit');
+    setTimeout(()=>$('pt-title').focus(),100);
+  }
+
+  function renderNoteBrowser(){
+    const list=$('nb-list');
+    const breadcrumb=$('nb-breadcrumb');
+    list.innerHTML='';
+    if(nbLevel==='folders'){
+      breadcrumb.innerHTML='<span>Notas › Escolher pasta ou nota</span>';
+      if(POSTIT_FOLDERS.length===0){
+        list.innerHTML='<div class="postit-empty">Crie uma pasta na tela de Notas para vincular uma pasta ou nota.</div>';
+        return;
+      }
+      // Item "Vincular pasta inteira" — lista todas as pastas (com checkbox se já selecionada)
+      POSTIT_FOLDERS.forEach(f=>{
+        const isSel=selectedLinks.some(l=>l.type==='folder'&&l.folderId===f.id);
+        const item=document.createElement('div');
+        item.className='nb-item folder'+(isSel?' selected':'');
+        item.style.setProperty('--c1',f.c1); item.style.setProperty('--c2',f.c2);
+        item.style.setProperty('--cat-soft','var(--kicker-bg)');
+        item.innerHTML=`
+          <span class="nb-check">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          <div class="nb-ic">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="nb-name">${f.name} <span style="color:var(--muted);font-weight:400">(pasta)</span></div>
+          <div class="nb-count">${f.count} notas</div>
+        `;
+        item.onclick=()=>{
+          // Toggle pasta inteira
+          const idx=selectedLinks.findIndex(l=>l.type==='folder'&&l.folderId===f.id);
+          if(idx>=0) selectedLinks.splice(idx,1);
+          else selectedLinks.push({type:'folder',folderId:f.id});
+          renderNoteBrowser();
+          renderSelectedLinks();
+          updateColorPreview();
+        };
+        list.appendChild(item);
+      });
+      // Separador + notas soltas
+      const sep=document.createElement('div');
+      sep.style.cssText='margin:6px 0;border-top:1px dashed var(--border);font-size:.7rem;color:var(--muted);font-weight:600;padding-left:11px;letter-spacing:.04em';
+      sep.textContent='OU ENTRE EM UMA PASTA PARA VINCULAR NOTAS ESPECÍFICAS:';
+      list.appendChild(sep);
+      POSTIT_FOLDERS.forEach(f=>{
+        const item=document.createElement('div');
+        item.className='nb-item folder';
+        item.style.setProperty('--c1',f.c1); item.style.setProperty('--c2',f.c2);
+        item.innerHTML=`
+          <div class="nb-ic">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="nb-name">${f.name}</div>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted)"><path d="M9 18l6-6-6-6"/></svg>
+        `;
+        item.onclick=()=>{ nbFolderSel=f.id; nbLevel='notes'; renderNoteBrowser(); };
+        list.appendChild(item);
+      });
+    } else {
+      const folder=POSTIT_FOLDERS.find(f=>f.id===nbFolderSel);
+      breadcrumb.innerHTML=`<button id="nb-back">Notas</button><span class="sep">›</span><span>${folder.name}</span>`;
+      $('nb-back').onclick=()=>{ nbLevel='folders'; nbFolderSel=null; renderNoteBrowser(); };
+      const notes=NOTES_BY_FOLDER[folder.id]||[];
+      // Vincular a pasta inteira (também disponível aqui)
+      const folderSel=selectedLinks.some(l=>l.type==='folder'&&l.folderId===folder.id);
+      const folderItem=document.createElement('div');
+      folderItem.className='nb-item folder'+(folderSel?' selected':'');
+      folderItem.style.setProperty('--c1',folder.c1); folderItem.style.setProperty('--c2',folder.c2);
+      folderItem.innerHTML=`
+        <span class="nb-check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+        <div class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="nb-name">Vincular pasta inteira (${folder.name})</div>
+        <div class="nb-count">todas</div>
+      `;
+      folderItem.onclick=()=>{
+        const idx=selectedLinks.findIndex(l=>l.type==='folder'&&l.folderId===folder.id);
+        if(idx>=0) selectedLinks.splice(idx,1);
+        else selectedLinks.push({type:'folder',folderId:folder.id});
+        renderNoteBrowser();
+        renderSelectedLinks();
+        updateColorPreview();
+      };
+      list.appendChild(folderItem);
+      // Notas individuais
+      notes.forEach(n=>{
+        const isSel=selectedLinks.some(l=>l.type==='note'&&l.folderId===folder.id&&l.title===n.t);
+        const item=document.createElement('div');
+        item.className='nb-item note'+(isSel?' selected':'');
+        item.innerHTML=`
+          <span class="nb-check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <div class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+          <div class="nb-name">${n.t}</div>
+          <div class="nb-count">${folder.tag}</div>
+        `;
+        item.onclick=()=>{
+          const idx=selectedLinks.findIndex(l=>l.type==='note'&&l.folderId===folder.id&&l.title===n.t);
+          if(idx>=0) selectedLinks.splice(idx,1);
+          else selectedLinks.push({type:'note',folderId:folder.id,title:n.t});
+          renderNoteBrowser();
+          renderSelectedLinks();
+          updateColorPreview();
+        };
+        list.appendChild(item);
+      });
+    }
+  }
+
+  function renderSelectedLinks(){
+    const list=$('nb-selected-list');
+    list.innerHTML='';
+    if(selectedLinks.length===0){
+      list.innerHTML=`<div style="font-size:.78rem;color:var(--muted);font-style:italic;padding:6px 0">Nenhum vínculo. O post-it ficará amarelo padrão.</div>`;
+      return;
+    }
+    selectedLinks.forEach((l,i)=>{
+      const folder=POSTIT_FOLDERS.find(f=>f.id===l.folderId);
+      const item=document.createElement('div');
+      item.className='nb-selected-item';
+      item.style.setProperty('--c1',folder?folder.c1:'var(--kicker-bg)');
+      item.style.setProperty('--c2',folder?folder.c2:'var(--kicker-bg)');
+      if(l.type==='folder'){
+        item.innerHTML=`
+          <div class="nb-ic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="nb-name">Pasta: ${folder?folder.name:'?'}</div>
+          <span class="nb-tag">${folder?folder.tag:''}</span>
+          <button class="nb-rm" data-i="${i}" aria-label="Remover"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+        `;
+      } else {
+        item.innerHTML=`
+          <div class="nb-ic note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+          <div class="nb-name">${l.title}</div>
+          <span class="nb-tag">${folder?folder.tag:''}</span>
+          <button class="nb-rm" data-i="${i}" aria-label="Remover"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+        `;
+      }
+      list.appendChild(item);
+    });
+    list.querySelectorAll('.nb-rm').forEach(btn=>{
+      btn.onclick=()=>{
+        selectedLinks.splice(parseInt(btn.dataset.i,10),1);
+        renderNoteBrowser();
+        renderSelectedLinks();
+        updateColorPreview();
+      };
+    });
+  }
+
+  function updateColorPreview(){
+    const swatch=$('color-swatch');
+    const labTitle=$('color-lab-title');
+    const labDesc=$('color-lab-desc');
+    const style=derivePostitStyle({
+      links:selectedLinks.length?selectedLinks:null,
+      eventId:selectedEventId,
+      source:'manual'
+    });
+    swatch.style.setProperty('--swatch-bg',style.postitBg);
+    swatch.style.setProperty('--swatch-edge',style.postitEdge);
+    if(selectedLinks.length===0){
+      labTitle.textContent='Amarelo padrão';
+      labDesc.textContent='Sem pasta vinculada — fica no amarelo clássico do Post-it';
+    } else {
+      const first=selectedLinks[0];
+      const folder=POSTIT_FOLDERS.find(f=>f.id===first.folderId);
+      labTitle.textContent=(folder?folder.name:'Pasta')+' · '+(first.type==='folder'?'pasta inteira':'nota');
+      labDesc.textContent='Cor derivada da primeira pasta vinculada';
+    }
+  }
+
+  /* ===== Submit ===== */
+  $('form-postit').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const title=$('pt-title').value.trim();
+    const body=$('pt-body').value.trim();
+    if(!title){showToast('⚠️ Dê um título ao post-it');return;}
+    const payload={title,body,links:selectedLinks.map(l=>({...l})),eventId:selectedEventId};
+    try{
+      const response=await fetch(editingId?'/api/postits/'+editingId+'/':'/api/postits/',{method:editingId?'PATCH':'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken()},body:JSON.stringify(payload)});
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.error||'Não foi possível salvar o post-it.');
+      showToast(editingId?'✅ Post-it atualizado':'✅ Post-it criado');
+      await loadPostits();
+    }catch(error){showToast(error.message);return;}
+    closeModal('modal-postit');
+    renderMural();
+  });
+
+  /* ===== Excluir post-it =====
+     Para excluir, criamos um pequeno fluxo: ao clicar em "Excluir" no modo edição,
+     removemos do array. Vamos adicionar um botão de exclusão abaixo do form quando estiver editando. */
+  async function deletePostit(id){
+    const response=await fetch('/api/postits/'+id+'/',{method:'DELETE',headers:{'X-CSRFToken':csrfToken()}});
+    if(!response.ok){showToast('Não foi possível excluir o post-it.');return;}
+    await loadPostits();
+    renderMural();
+    showToast('🗑️ Post-it excluído');
+  }
+  // Adiciona botão "Excluir" no modal quando editando
+  const originalFormOpen=openPostitModal;
+  openPostitModal=function(p=null){
+    originalFormOpen(p);
+    const existing=$('btn-delete-postit');
+    if(existing) existing.remove();
+    if(p && p.source==='manual'){
+      const btnRow=document.querySelector('#form-postit .btn-row');
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.id='btn-delete-postit';
+      btn.className='btn btn-danger';
+      btn.style.cssText='width:100%;margin-top:8px';
+      btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Excluir post-it';
+      btn.onclick=async()=>{
+        if(await askDeleteConfirmation('Excluir este post-it? Esta ação não pode ser desfeita.')){
+          await deletePostit(p.id);
+          closeModal('modal-postit');
+        }
+      };
+      btnRow.parentNode.insertBefore(btn,btnRow);
+    }
+  };
+
+  /* ===== Busca ===== */
+  $('search-input').addEventListener('input',renderMural);
+
+  /* ===== FAB ===== */
+  $('fab-add').onclick=()=>openPostitModal();
+
+  /* ===== Atalhos ===== */
+  document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+    if(e.key==='n'||e.key==='N'){e.preventDefault();openPostitModal();}
+  });
+
+  /* ===== Suporte a retorno do evento (?evento=ID) =====
+     Vem do calendário → mostra banner "Voltar ao evento X" no topo do mural.
+     O usuário clica e retorna ao calendário (que reabrirá o drawer do evento).
+  */
+  function checkReturnFromEvent(){
+    const params=new URLSearchParams(window.location.search);
+    const evId=params.get('evento');
+    if(!evId) return;
+    const ev=findEventById(parseInt(evId,10));
+    if(!ev) return;
+    const banner=$('return-banner');
+    banner.style.display='flex';
+    $('return-banner-text').innerHTML='Voltar ao evento: <b>'+escapeHtml(ev.title)+'</b> · '+
+      new Date(ev.date+'T'+ev.time).toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+' às '+ev.time;
+    showToast('📌 Post-it vinculado ao evento "'+ev.title+'"');
+  }
+  function goToEventFromBanner(){
+    const params=new URLSearchParams(window.location.search);
+    const evId=params.get('evento');
+    if(evId) window.location.href='calendario.html?evento='+evId;
+  }
+
+  /* ===== Init ===== */
+  loadPostits().then(renderMural);
+  checkReturnFromEvent();
+  // Re-renderiza ao trocar tema (cores de pasta mudam no dark)
+  const origSetTheme=setTheme;
+  setTheme=function(t){origSetTheme(t);renderMural();};
+</script>
+</body>
+</html>

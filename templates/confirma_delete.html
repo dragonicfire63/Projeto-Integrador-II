@@ -1,0 +1,67 @@
+<style>
+  .delete-confirm-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;
+    padding:20px;background:rgba(10,10,25,.58);backdrop-filter:blur(5px)}
+  .delete-confirm-overlay[hidden]{display:none}
+  .delete-confirm-dialog{width:min(100%,390px);padding:24px;background:var(--surface,#fff);color:var(--ink,#1E1B4B);
+    border:1px solid var(--border,#E4E4F4);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.32)}
+  .delete-confirm-heading{display:flex;align-items:center;gap:11px;margin-bottom:8px;font-size:1.05rem;font-weight:700}
+  .delete-confirm-icon{width:38px;height:38px;display:grid;place-items:center;flex:0 0 38px;
+    border-radius:11px;background:var(--danger-soft,#FFF1F2);color:var(--danger,#E11D48)}
+  .delete-confirm-message{color:var(--muted,#6B7194);font-size:.88rem;line-height:1.5;margin:0 0 20px;overflow-wrap:anywhere}
+  .delete-confirm-actions{display:flex;justify-content:flex-end;gap:9px}
+  .delete-confirm-actions button{min-height:40px;padding:8px 14px;border-radius:9px;font:inherit;font-size:.84rem;font-weight:600;cursor:pointer}
+  .delete-confirm-cancel{border:1px solid var(--border,#E4E4F4);background:var(--surface,#fff);color:var(--ink,#1E1B4B)}
+  .delete-confirm-cancel:hover{background:var(--kicker-bg,#EEF2FF)}
+  .delete-confirm-accept{border:1px solid var(--danger,#E11D48);background:var(--danger,#E11D48);color:#fff}
+  .delete-confirm-accept:hover{filter:brightness(.92)}
+  .delete-confirm-actions button:focus-visible{outline:3px solid var(--ring,rgba(79,70,229,.22));outline-offset:2px}
+  @media(max-width:480px){.delete-confirm-actions{flex-direction:column-reverse}.delete-confirm-actions button{width:100%}}
+</style>
+<div class="delete-confirm-overlay" id="delete-confirm-overlay" hidden>
+  <section class="delete-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-confirm-heading" aria-describedby="delete-confirm-message">
+    <h2 class="delete-confirm-heading" id="delete-confirm-heading">
+      <span class="delete-confirm-icon" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01"/><path d="M10.3 3.9 1.8 18.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      </span>
+      Tem certeza?
+    </h2>
+    <p class="delete-confirm-message" id="delete-confirm-message"></p>
+    <div class="delete-confirm-actions">
+      <button type="button" class="delete-confirm-cancel" id="delete-confirm-cancel">Cancelar</button>
+      <button type="button" class="delete-confirm-accept" id="delete-confirm-accept">Sim, excluir</button>
+    </div>
+  </section>
+</div>
+<script>
+  (function(){
+    const overlay=document.getElementById('delete-confirm-overlay');
+    const message=document.getElementById('delete-confirm-message');
+    const cancel=document.getElementById('delete-confirm-cancel');
+    const accept=document.getElementById('delete-confirm-accept');
+    let resolveConfirmation=null;
+    let previousFocus=null;
+    function finish(result){
+      overlay.hidden=true;
+      document.removeEventListener('keydown',onKeyDown);
+      if(previousFocus&&previousFocus.isConnected)previousFocus.focus();
+      const resolve=resolveConfirmation;
+      resolveConfirmation=null;
+      if(resolve)resolve(result);
+    }
+    function onKeyDown(event){
+      if(event.key==='Escape'){event.preventDefault();finish(false)}
+    }
+    window.askDeleteConfirmation=function(text){
+      if(resolveConfirmation)finish(false);
+      previousFocus=document.activeElement;
+      message.textContent=text||'Esta ação não pode ser desfeita.';
+      overlay.hidden=false;
+      document.addEventListener('keydown',onKeyDown);
+      cancel.focus();
+      return new Promise(resolve=>{resolveConfirmation=resolve});
+    };
+    cancel.addEventListener('click',()=>finish(false));
+    accept.addEventListener('click',()=>finish(true));
+    overlay.addEventListener('click',event=>{if(event.target===overlay)finish(false)});
+  })();
+</script>

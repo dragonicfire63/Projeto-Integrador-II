@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conexo — Notas</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cg%20stroke='%234F46E5'%20stroke-width='6'%20stroke-linecap='round'%3E%3Cpath%20d='M50%2050L69%2031M50%2050L31%2031M50%2050L31%2069M50%2050L69%2069'/%3E%3C/g%3E%3Cg%20fill='%234F46E5'%3E%3Ccircle%20cx='70'%20cy='30'%20r='8'/%3E%3Ccircle%20cx='30'%20cy='30'%20r='8'/%3E%3Ccircle%20cx='30'%20cy='70'%20r='8'/%3E%3Ccircle%20cx='70'%20cy='70'%20r='8'/%3E%3Ccircle%20cx='50'%20cy='50'%20r='10.5'/%3E%3C/g%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  /* Aplica o tema antes da página renderizar (evita "flash" de tema errado) */
+  (function(){
+    try{
+      const t=localStorage.getItem('theme');
+      if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))
+        document.documentElement.setAttribute('data-theme','dark');
+    }catch(e){}
+  })();
+</script>
+<style>
+  :root{
+    --primary:#4F46E5; --primary-2:#7C3AED; --link:#4F46E5;
+    --ink:#1E1B4B; --muted:#6B7194; --border:#E4E4F4;
+    --bg-gradient:linear-gradient(150deg,#EEF2FF 0%,#FDF4FF 55%,#EEF2FF 100%);
+    --surface:#fff; --kicker-bg:#EEF2FF; --input-bg:#fff;
+    --blob-1:#C7D2FE; --blob-2:#DDD6FE; --blob-opacity:.55;
+    --card-shadow:0 20px 40px -18px rgba(30,27,75,.15);
+    --ring:rgba(79,70,229,.12);
+    --toast-bg:#1E1B4B; --toast-text:#fff;
+    --close-bg:#F1F1FA; --close-hover:#E4E4F4;
+    --danger:#E11D48; --danger-soft:#FFF1F2; --danger-border:#FECDD3;
+    --gx-a:#4F46E5; --gx-b:#9333EA;
+  }
+  [data-theme="dark"]{
+    --primary:#6366F1; --primary-2:#8B5CF6; --link:#A5B4FC;
+    --ink:#F1F0FF; --muted:#A5A3C4; --border:#312F55;
+    --bg-gradient:linear-gradient(150deg,#12112A 0%,#191634 55%,#12112A 100%);
+    --surface:#1D1B38; --kicker-bg:#26244A; --input-bg:#26244A;
+    --blob-1:#3730A3; --blob-2:#5B21B6; --blob-opacity:.3;
+    --card-shadow:0 20px 40px -18px rgba(0,0,0,.5);
+    --ring:rgba(129,140,248,.28);
+    --toast-bg:#F1F0FF; --toast-text:#1E1B4B;
+    --close-bg:#26244A; --close-hover:#312F55;
+    --danger:#FB7185; --danger-soft:rgba(244,63,94,.08); --danger-border:rgba(251,113,133,.35);
+    --gx-a:#818CF8; --gx-b:#A78BFA;
+    color-scheme:dark;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Poppins',sans-serif;color:var(--ink);min-height:100vh;
+    display:flex;flex-direction:column;overflow-x:hidden;
+    background:var(--bg-gradient);
+    transition:background .35s ease,color .35s ease;
+  }
+  .blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:var(--blob-opacity);z-index:-1;pointer-events:none;transition:background .35s,opacity .35s}
+  .blob-1{width:420px;height:420px;background:var(--blob-1);top:-120px;right:-80px}
+  .blob-2{width:360px;height:360px;background:var(--blob-2);bottom:-100px;left:-80px}
+
+  /* ===== Topbar ===== */
+  .topbar{max-width:1080px;margin:0 auto;padding:20px 24px 0;width:100%;
+    display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .topbar-left{display:flex;align-items:center;gap:12px}
+  .icon-btn{width:42px;height:42px;border-radius:50%;cursor:pointer;flex-shrink:0;
+    border:1.5px solid var(--border);background:var(--surface);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;text-decoration:none;
+    transition:transform .2s,border-color .2s,background .35s,color .35s}
+  .icon-btn:hover{transform:scale(1.08);border-color:var(--primary);color:var(--link)}
+  .wordmark{display:flex;align-items:center;gap:2px;font-weight:800;font-size:1.3rem;letter-spacing:-.03em;color:var(--ink);text-decoration:none}
+  .xmark{width:.85em;height:.85em;margin:0 .04em}
+  .gx-a,.gx-b{transition:stop-color .35s}
+  .icon-sun{display:none}
+  [data-theme="dark"] .icon-sun{display:block}
+  [data-theme="dark"] .icon-moon{display:none}
+  .topbar{position:relative}
+  .app-logout-btn{position:absolute;right:76px;top:20px;height:42px;padding:0 13px;display:inline-flex;
+    align-items:center;justify-content:center;gap:7px;border:1.5px solid var(--border);border-radius:12px;
+    background:var(--surface);color:var(--muted);font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;transition:.2s}
+  .app-logout-btn:hover{color:var(--danger);border-color:var(--danger-border);background:var(--danger-soft)}
+  .app-logout-btn:disabled{opacity:.55;cursor:wait}
+  @media(max-width:480px){.app-logout-btn{right:72px;padding:0 10px}}
+
+  /* ===== App nav (5 itens) ===== */
+  .app-nav{max-width:1080px;margin:14px auto 0;padding:0 24px;width:100%}
+  .app-nav-inner{background:var(--surface);border:1px solid var(--border);border-radius:18px;
+    box-shadow:var(--card-shadow);padding:8px;display:flex;justify-content:space-around;gap:6px;
+    transition:background .35s,border-color .35s}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:11px 6px 9px;border-radius:12px;text-decoration:none;
+    color:var(--muted);font-size:.7rem;font-weight:600;letter-spacing:.06em;
+    cursor:pointer;transition:.2s;position:relative}
+  .nav-item svg{color:var(--muted);transition:color .2s}
+  .nav-item:hover{color:var(--ink);background:var(--kicker-bg)}
+  .nav-item:hover svg{color:var(--link)}
+  .nav-item.active{color:var(--danger);background:var(--danger-soft)}
+  .nav-item.active svg{color:var(--danger)}
+  .nav-item .nav-ic-wrap{position:relative}
+  .nav-cal-day{position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+    font-size:6px;font-weight:700;letter-spacing:0;color:var(--muted)}
+  .nav-item.active .nav-cal-day{color:var(--danger)}
+
+  /* ===== Page head ===== */
+  .page-head{max-width:1080px;width:100%;margin:0 auto;padding:22px 24px 0}
+  h1{font-size:clamp(1.6rem,3.5vw,2.1rem);font-weight:800;letter-spacing:-.4px}
+  .page-sub{color:var(--muted);font-size:.92rem;margin-top:2px}
+
+  main{flex:1;width:100%;max-width:1080px;margin:0 auto;padding:20px 24px 40px}
+
+  /* ===== Action bar: + e busca por tag ===== */
+  .action-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    margin-bottom:24px;flex-wrap:wrap}
+  .add-btn{width:56px;height:56px;border-radius:18px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    box-shadow:0 14px 28px -10px rgba(79,70,229,.55);
+    transition:transform .18s,box-shadow .18s}
+  .add-btn:hover{transform:translateY(-2px) rotate(90deg);box-shadow:0 18px 32px -10px rgba(79,70,229,.65)}
+  .add-btn:active{transform:translateY(0) rotate(90deg) scale(.96)}
+
+  .tag-filter{display:flex;align-items:center;gap:12px;flex:1;min-width:240px;justify-content:flex-end}
+  .tag-label{color:var(--danger);font-weight:700;font-size:.85rem;display:inline-flex;align-items:center;gap:6px;letter-spacing:.04em}
+  .tag-label svg{flex-shrink:0}
+  .search-box{position:relative;flex:1;max-width:380px}
+  .search-box input{width:100%;padding:13px 46px 13px 18px;border-radius:14px;
+    border:1.5px solid var(--border);background:var(--surface);color:var(--ink);
+    font:inherit;font-size:.95rem;font-weight:500;transition:.2s,background .35s,border-color .35s}
+  .search-box input::placeholder{color:var(--muted);opacity:.7;font-weight:400}
+  .search-box input:focus{outline:none;border-color:var(--danger);box-shadow:0 0 0 4px rgba(225,29,72,.12)}
+  [data-theme="dark"] .search-box input:focus{box-shadow:0 0 0 4px rgba(251,113,133,.18)}
+  .search-box input.has-value{color:var(--danger);font-weight:600}
+  .search-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;
+    background:var(--kicker-bg);color:var(--link);
+    display:flex;align-items:center;justify-content:center;transition:.2s}
+  .search-btn:hover{background:var(--primary);color:#fff}
+
+  /* ===== Grid de pastas ===== */
+  .folders-head{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;padding:0 4px}
+  .folders-head h2{font-size:1.05rem;font-weight:700}
+  .folders-head small{color:var(--muted);font-size:.82rem}
+  .folders-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .subfolder-list{display:grid;gap:8px;margin:8px 0 14px}
+  .subfolder-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+  .subfolder-open{display:flex;align-items:center;gap:8px;flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+  .subfolder-open strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .subfolder-open small{color:var(--muted);white-space:nowrap}
+  .folder-action{width:34px;height:34px;flex:0 0 34px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--link);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .folder-action:hover{border-color:var(--primary);background:var(--kicker-bg)}
+  .tag-results{margin:8px 0 24px;border-bottom:1px solid var(--border);padding:0 4px 18px}
+  .tag-results[hidden]{display:none}
+  .tag-results-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+  .tag-results-head h2{font-size:1rem;font-weight:700}
+  .tag-results-head small{color:var(--muted);font-size:.8rem}
+  .tag-result-list{display:grid;gap:6px}
+  .tag-result{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;text-align:left;
+    color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    font:inherit;cursor:pointer;transition:border-color .18s,background .18s}
+  .tag-result:hover{border-color:var(--primary);background:var(--kicker-bg)}
+  .tag-result-title{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tag-result-tag{font-size:.72rem;font-weight:700;color:var(--danger);background:var(--danger-soft);
+    padding:4px 8px;border-radius:999px;white-space:nowrap}
+  .tag-result-folder{font-size:.78rem;color:var(--muted);white-space:nowrap}
+  .folder-card{position:relative;background:var(--surface);border:1.5px solid var(--border);
+    border-radius:20px;padding:22px 18px;cursor:pointer;text-align:left;font:inherit;color:var(--ink);
+    display:flex;flex-direction:column;align-items:flex-start;gap:12px;
+    box-shadow:var(--card-shadow);transition:.2s,background .35s,border-color .35s;
+    overflow:hidden}
+  .folder-card::before{content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,var(--c1),var(--c2));opacity:.07;pointer-events:none;
+    transition:opacity .25s}
+  .folder-card:hover{transform:translateY(-3px);border-color:var(--primary)}
+  .folder-card:hover::before{opacity:.14}
+
+  .folder-ic{width:54px;height:54px;border-radius:14px;position:relative;flex-shrink:0;
+    background:linear-gradient(135deg,var(--c1),var(--c2));
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    box-shadow:0 10px 22px -8px var(--c1)}
+  .folder-ic svg{filter:drop-shadow(0 2px 4px rgba(0,0,0,.18))}
+  .folder-ic::after{content:'';position:absolute;top:-2px;right:-2px;
+    width:14px;height:14px;border-radius:50%;
+    background:var(--surface);border:1.5px solid var(--border);
+    background:linear-gradient(135deg,var(--c1),var(--c2))}
+
+  .folder-body{display:flex;flex-direction:column;gap:2px;width:100%;position:relative}
+  .folder-name{font-size:1.05rem;font-weight:700;letter-spacing:-.2px;color:var(--ink);transition:color .2s}
+  .folder-meta{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.8rem}
+  .folder-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--muted)}
+  .folder-count{font-weight:600;color:var(--link)}
+  .folder-tag{font-size:.74rem;font-weight:600;color:var(--muted);
+    background:var(--kicker-bg);padding:3px 9px;border-radius:999px;letter-spacing:.04em}
+
+  .folder-card .chev{position:absolute;right:0;bottom:0;color:var(--muted);opacity:.4;transition:.25s}
+  .folder-card:hover .chev{opacity:1;color:var(--link);transform:translateX(3px)}
+
+  /* Estado ativo (vermelho) — pasta que casa com a tag filtrada */
+  .folder-card.active{border-color:var(--danger);box-shadow:0 0 0 3px rgba(225,29,72,.15),var(--card-shadow)}
+  [data-theme="dark"] .folder-card.active{box-shadow:0 0 0 3px rgba(251,113,133,.22),var(--card-shadow)}
+  .folder-card.active::before{opacity:0}
+  .folder-card.active .folder-name{color:var(--danger)}
+  .folder-card.active .folder-count{color:var(--danger)}
+  .folder-card.active .folder-tag{background:var(--danger-soft);color:var(--danger)}
+  .folder-card.active .chev{color:var(--danger);opacity:1}
+  .active-badge{position:absolute;top:14px;right:14px;display:inline-flex;align-items:center;gap:5px;
+    background:var(--danger);color:#fff;font-size:.66rem;font-weight:700;letter-spacing:.08em;
+    padding:4px 9px;border-radius:999px;text-transform:uppercase;box-shadow:0 6px 14px -4px rgba(225,29,72,.5)}
+  .folder-card:not(.active) .active-badge{display:none}
+
+  /* Sem resultados */
+  .empty{grid-column:1/-1;background:var(--surface);border:1.5px dashed var(--border);
+    border-radius:18px;padding:48px 24px;text-align:center;color:var(--muted);font-size:.92rem}
+  .empty svg{margin-bottom:10px;opacity:.4}
+  .empty b{display:block;color:var(--ink);font-size:1.05rem;margin-bottom:4px}
+
+  /* ===== Modais (mesma base das outras telas) ===== */
+  .overlay{position:fixed;inset:0;background:rgba(10,10,25,.5);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+    opacity:0;pointer-events:none;transition:.25s}
+  .overlay.open{opacity:1;pointer-events:auto}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:30px;
+    width:100%;max-width:440px;position:relative;max-height:90vh;overflow-y:auto;
+    box-shadow:0 30px 60px -15px rgba(0,0,0,.4);transform:translateY(16px) scale(.97);transition:.25s}
+  .overlay.open .modal{transform:none}
+  .modal h2{font-size:1.3rem;font-weight:700}
+  .modal-sub{color:var(--muted);font-size:.88rem;margin:4px 0 18px}
+  .modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;
+    border:none;background:var(--close-bg);color:var(--muted);font-size:1.2rem;cursor:pointer;transition:.2s}
+  .modal-close:hover{background:var(--close-hover);color:var(--ink)}
+  .field{margin-bottom:15px}
+  .field label{font-size:.83rem;font-weight:600;display:block;margin-bottom:6px}
+  .field input,.field textarea,.field select{width:100%;padding:11px 14px;border:1.5px solid var(--border);
+    border-radius:11px;font:inherit;background:var(--input-bg);color:var(--ink);transition:.2s}
+  .field textarea{resize:vertical;min-height:80px;font-family:inherit}
+  .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--ring)}
+  .color-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:6px}
+  .color-pick{width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--c1),var(--c2));transition:.2s;outline:2.5px solid transparent;outline-offset:2px}
+  .color-pick:hover{transform:scale(1.1)}
+  .color-pick.active{outline-color:var(--ink)}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 22px;border-radius:13px;font:inherit;font-weight:600;font-size:.95rem;
+    cursor:pointer;border:none;transition:transform .18s,box-shadow .18s,background .35s,color .35s,border-color .35s}
+  .btn-block{width:100%}
+  .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+    box-shadow:0 10px 22px -8px rgba(79,70,229,.55)}
+  .btn-primary:hover{transform:translateY(-2px)}
+  .btn-outline{background:transparent;color:var(--link);border:1.5px solid var(--border)}
+  .btn-outline:hover{border-color:var(--primary)}
+  .btn-danger{background:var(--danger);color:#fff;box-shadow:0 8px 18px -8px rgba(225,29,72,.5)}
+  .btn-danger:hover{transform:translateY(-1px);filter:brightness(.96)}
+  .btn-sm{width:38px;height:38px;padding:0;border-radius:10px;flex:0 0 38px}
+
+  /* ===== Toast ===== */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--toast-bg);color:var(--toast-text);padding:12px 22px;border-radius:999px;
+    font-size:.9rem;opacity:0;transition:.3s,background .35s,color .35s;z-index:60;
+    box-shadow:0 12px 30px -8px rgba(0,0,0,.4);max-width:90vw;text-align:center}
+  #toast.show{transform:translateX(-50%);opacity:1}
+
+  /* ===== Footer ===== */
+  footer{width:100%;max-width:1080px;margin:0 auto;padding:0 24px 28px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .help{display:inline-flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none;
+    font-size:.88rem;font-weight:500;padding:9px 17px;border-radius:999px;
+    border:1.5px solid var(--border);background:var(--surface);transition:.2s}
+  .help:hover{color:var(--link);border-color:var(--primary)}
+  .version{color:var(--muted);font-size:.78rem}
+
+  /* ===== Responsivo ===== */
+  @media (max-width:820px){
+    .folders-grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:640px){
+    .app-nav-inner{padding:6px;gap:2px}
+    .nav-item{font-size:.6rem;padding:9px 4px 7px;letter-spacing:.04em}
+    .nav-item svg{width:20px!important;height:20px!important}
+    .action-bar{flex-direction:column;align-items:stretch}
+    .add-btn{align-self:flex-start}
+    .tag-filter{justify-content:flex-start}
+    .search-box{max-width:none}
+    .folders-grid{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition-duration:.001s!important}
+  }
+</style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- ===== Topbar ===== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" type="button" data-app-back data-fallback="index.html" aria-label="Voltar à página anterior" title="Voltar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <a class="wordmark" href="index.html" aria-label="Conexo">cone<svg class="xmark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="16.5" fill="none" stroke="url(#gxTop)" stroke-width="3" stroke-dasharray="3 5" stroke-linecap="round" opacity=".55"/>
+        <g stroke="url(#gxTop)" stroke-width="5.5" stroke-linecap="round"><path d="M50 50L69 31M50 50L31 31M50 50L31 69M50 50L69 69"/></g>
+        <g fill="url(#gxTop)"><circle cx="70" cy="30" r="8"/><circle cx="30" cy="30" r="8"/><circle cx="30" cy="70" r="8"/><circle cx="70" cy="70" r="8"/></g>
+        <g fill="url(#gxTop)" opacity=".8"><circle cx="84" cy="38" r="4.5"/><circle cx="62" cy="16" r="4.5"/><circle cx="16" cy="38" r="4.5"/><circle cx="38" cy="16" r="4.5"/><circle cx="16" cy="62" r="4.5"/><circle cx="38" cy="84" r="4.5"/><circle cx="84" cy="62" r="4.5"/><circle cx="62" cy="84" r="4.5"/></g>
+        <circle cx="50" cy="50" r="10.5" fill="url(#gxTop)"/>
+        <defs><linearGradient id="gxTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="gx-a"/><stop offset="1" class="gx-b"/></linearGradient></defs>
+      </svg>o</a>
+    </div>
+    {% include "controle_sessao.html" %}
+    <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema" title="Modo claro/escuro">
+      <svg class="icon-moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l-1.42-1.42M18.36 5.64l1.42 1.42"/></svg>
+    </button>
+  </header>
+
+  <!-- ===== Navegação do app (5 itens do wireframe) ===== -->
+  <nav class="app-nav" aria-label="Navegação principal">
+    <div class="app-nav-inner">
+      <!-- 1. NOTAS (ativo) -->
+      <a class="nav-item active" href="notas.html" aria-current="page">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6M9 13l2 2 4-4"/>
+          </svg>
+        </div>
+        <span>NOTAS</span>
+      </a>
+
+      <!-- 2. CALENDARIO -->
+      <a class="nav-item" href="calendario.html">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+            <text x="12" y="20" text-anchor="middle" font-size="6.5" font-weight="700" fill="currentColor" stroke="none" font-family="Poppins,sans-serif">1</text>
+          </svg>
+        </div>
+        <span>CALENDARIO</span>
+      </a>
+
+      <!-- 3. POST iT -->
+      <a class="nav-item" href="postits.html">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="3" width="13" height="13" rx="1.5" transform="rotate(-6 10 9)"/>
+            <rect x="7" y="6" width="13" height="13" rx="1.5" transform="rotate(4 13 12)"/>
+            <path d="M11 11l3 3M14 11l-3 3" stroke-width="1.4" opacity=".7"/>
+          </svg>
+        </div>
+        <span>POST iT</span>
+      </a>
+
+      <!-- 4. CONTA (acessa configurações do app) -->
+      <a class="nav-item" href="configuracoes.html">
+        <div class="nav-ic-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10L12 5 2 10l10 5 10-5z"/>
+            <path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+            <path d="M22 10v6"/>
+          </svg>
+        </div>
+        <span>CONTA</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===== Cabeçalho da página ===== -->
+  <div class="page-head">
+    <h1>Notas</h1>
+    <p class="page-sub">Organize suas notas em pastas e encontre tudo em segundos.</p>
+  </div>
+
+  <!-- ===== Conteúdo principal ===== -->
+  <main>
+    <!-- Barra de ações: botão + (esquerda) e filtro por tag com busca (direita) -->
+    <div class="action-bar">
+      <button class="add-btn" onclick="openModal('modal-add')" aria-label="Adicionar nova nota/pasta" title="Adicionar">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <div class="tag-filter">
+        <span class="tag-label">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5"/></svg>
+          TAG
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </span>
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Buscar por tag..." autocomplete="off" aria-label="Buscar por tag">
+          <button class="search-btn" onclick="performSearch()" aria-label="Buscar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <section class="tag-results" id="tag-results" hidden aria-live="polite">
+      <div class="tag-results-head">
+        <h2>Notas com esta tag</h2>
+        <small id="tag-results-count"></small>
+      </div>
+      <div class="tag-result-list" id="tag-result-list"></div>
+    </section>
+
+    <!-- Cabeçalho da grade de pastas -->
+    <div class="folders-head">
+      <h2>Minhas pastas</h2>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <small id="folders-count">0 pastas · 0 notas no total</small>
+        <button class="btn btn-outline" id="create-folder-main" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Criar pasta
+        </button>
+      </div>
+    </div>
+
+    <!-- Pastas pessoais da conta -->
+    <section class="folders-grid" id="folders-grid">
+      {% comment %}
+      <button class="folder-card" data-name="quimica" data-tag="QUÍMICA" data-count="12" style="--c1:#0EA5E9;--c2:#06B6D4">
+        <div class="active-badge">Filtrando</div>
+        <div class="folder-ic">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="folder-body">
+          <span class="folder-name">Química</span>
+          <div class="folder-meta">
+            <span class="folder-count">12 notas</span><span class="dot"></span><span>atualizada ontem</span>
+          </div>
+          <span class="folder-tag">QUÍMICA</span>
+        </div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <button class="folder-card" data-name="ti" data-tag="TI" data-count="24" style="--c1:#4F46E5;--c2:#7C3AED">
+        <div class="active-badge">Filtrando</div>
+        <div class="folder-ic">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="folder-body">
+          <span class="folder-name">TI</span>
+          <div class="folder-meta">
+            <span class="folder-count">24 notas</span><span class="dot"></span><span>atualizada hoje</span>
+          </div>
+          <span class="folder-tag">TI</span>
+        </div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <button class="folder-card" data-name="engenharia" data-tag="ENGENHARIA" data-count="18" style="--c1:#D97706;--c2:#F59E0B">
+        <div class="active-badge">Filtrando</div>
+        <div class="folder-ic">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="folder-body">
+          <span class="folder-name">Engenharia</span>
+          <div class="folder-meta">
+            <span class="folder-count">18 notas</span><span class="dot"></span><span>há 3 dias</span>
+          </div>
+          <span class="folder-tag">ENGENHARIA</span>
+        </div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <!-- Linha 2 -->
+      <button class="folder-card" data-name="matematica" data-tag="MATEMÁTICA" data-count="31" style="--c1:#2563EB;--c2:#3B82F6">
+        <div class="active-badge">Filtrando</div>
+        <div class="folder-ic">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="folder-body">
+          <span class="folder-name">Matemática</span>
+          <div class="folder-meta">
+            <span class="folder-count">31 notas</span><span class="dot"></span><span>atualizada hoje</span>
+          </div>
+          <span class="folder-tag">MATEMÁTICA</span>
+        </div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <button class="folder-card" data-name="fisica" data-tag="FÍSICA" data-count="15" style="--c1:#F472B6;--c2:#FBCFE8">
+        <div class="active-badge">Filtrando</div>
+        <div class="folder-ic">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="folder-body">
+          <span class="folder-name">Física</span>
+          <div class="folder-meta">
+            <span class="folder-count">15 notas</span><span class="dot"></span><span>há 2 dias</span>
+          </div>
+          <span class="folder-tag">FÍSICA</span>
+        </div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <button class="folder-card active" data-name="biologia" data-tag="BIOLOGIA" data-count="8" style="--c1:#059669;--c2:#10B981">
+        <div class="active-badge">Filtrando</div>
+        <div class="folder-ic">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="folder-body">
+          <span class="folder-name">Biologia</span>
+          <div class="folder-meta">
+            <span class="folder-count">8 notas</span><span class="dot"></span><span>atualizada hoje</span>
+          </div>
+          <span class="folder-tag">BIOLOGIA</span>
+        </div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      {% endcomment %}
+    </section>
+
+    <section id="unfiled-section" style="margin-top:28px;display:none">
+      <div class="folders-head">
+        <h2>Notas sem pasta</h2>
+        <small id="unfiled-count"></small>
+      </div>
+      <div id="unfiled-list" style="display:grid;gap:10px"></div>
+    </section>
+  </main>
+
+  <footer>
+    <a href="#" class="help" onclick="event.preventDefault();showToast('Central de ajuda (demonstração)')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      Ajuda
+    </a>
+    <span class="version">Conexo · v1.0</span>
+  </footer>
+
+  <!-- ===== Modal: Adicionar nova nota/pasta ===== -->
+  <div class="overlay" id="modal-add">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" onclick="closeModal('modal-add')" aria-label="Fechar">&times;</button>
+      <h2>Nova nota</h2>
+      <p class="modal-sub">Escolha uma das suas pastas ou crie uma nova.</p>
+      <form id="form-add">
+        <button type="button" class="btn btn-outline btn-block" id="open-folder-form" style="margin-bottom:16px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 12v6M9 15h6"/></svg>
+          Criar pasta
+        </button>
+        <div class="field">
+          <label for="add-titulo">Título</label>
+          <input id="add-titulo" type="text" placeholder="Ex.: Aula sobre mitose" required>
+        </div>
+        <div class="field">
+          <label for="add-materia">Pasta (opcional)</label>
+          <select id="add-materia">
+            <option value="" selected>Sem pasta</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="add-tag">Tag</label>
+          <input id="add-tag" type="text" placeholder="Tag da nota">
+        </div>
+        <div class="field">
+          <label for="add-conteudo">Conteúdo</label>
+          <textarea id="add-conteudo" placeholder="Escreva aqui suas anotações..."></textarea>
+        </div>
+        <div class="field">
+          <label>Cor da pasta</label>
+          <div class="color-row">
+            <button type="button" class="color-pick active" data-color="#4F46E5,#7C3AED" style="--c1:#4F46E5;--c2:#7C3AED" aria-label="Índigo"></button>
+            <button type="button" class="color-pick" data-color="#0EA5E9,#06B6D4" style="--c1:#0EA5E9;--c2:#06B6D4" aria-label="Ciano"></button>
+            <button type="button" class="color-pick" data-color="#059669,#10B981" style="--c1:#059669;--c2:#10B981" aria-label="Esmeralda"></button>
+            <button type="button" class="color-pick" data-color="#D97706,#F59E0B" style="--c1:#D97706;--c2:#F59E0B" aria-label="Âmbar"></button>
+            <button type="button" class="color-pick" data-color="#DB2777,#EC4899" style="--c1:#DB2777;--c2:#EC4899" aria-label="Rosa"></button>
+            <button type="button" class="color-pick" data-color="#2563EB,#3B82F6" style="--c1:#2563EB;--c2:#3B82F6" aria-label="Azul"></button>
+          </div>
+        </div>
+        <button type="submit" id="add-note-submit" class="btn btn-primary btn-block">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Criar nota
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Modal: Notas dentro da pasta (placeholder de próxima tela) ===== -->
+  <div class="overlay" id="modal-folder">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" onclick="closeModal('modal-folder')" aria-label="Fechar">&times;</button>
+      <h2 id="folder-modal-title">Notas — </h2>
+      <p class="modal-sub" id="folder-modal-sub"></p>
+      <div class="folders-head"><h3 style="font-size:.9rem">Subpastas</h3><button class="btn btn-outline" id="create-subfolder-button" type="button">Criar subpasta</button></div>
+      <div class="subfolder-list" id="folder-modal-children"></div>
+      <div id="folder-modal-notes" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button class="btn btn-outline btn-block" id="edit-folder-button" style="margin-top:12px" type="button">Editar pasta</button>
+      <button class="btn btn-danger btn-block" id="delete-folder-button" style="margin-top:12px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m2 0-.8 14H6.8L6 6m4 4v6m4-6v6"/></svg>
+        Excluir pasta
+      </button>
+      <button class="btn btn-primary btn-block" id="add-note-to-folder" style="margin-top:18px" onclick="closeModal('modal-folder');openModal('modal-add')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Adicionar nota a esta pasta
+      </button>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-folder-add">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="new-folder-title">
+      <button class="modal-close" onclick="closeModal('modal-folder-add')" aria-label="Fechar">&times;</button>
+      <h2 id="new-folder-title">Nova pasta</h2>
+      <p class="modal-sub" id="folder-form-sub">Crie uma pasta para organizar suas notas.</p>
+      <form id="form-folder-add">
+        <div class="field">
+          <label for="folder-name">Nome da pasta</label>
+          <input id="folder-name" type="text" maxlength="80" placeholder="Ex.: Projetos pessoais" required>
+        </div>
+        <div class="field">
+          <label for="folder-tag">Tag</label>
+          <input id="folder-tag" type="text" maxlength="80" placeholder="Opcional">
+        </div>
+        <div class="field">
+          <label for="folder-parent">Pasta superior</label>
+          <select id="folder-parent"><option value="">Nenhuma (pasta principal)</option></select>
+        </div>
+        <div class="field">
+          <label>Cor da pasta</label>
+          <div class="color-row" id="folder-color-row">
+            <button type="button" class="color-pick active" data-color="#4F46E5,#7C3AED" style="--c1:#4F46E5;--c2:#7C3AED" aria-label="Índigo"></button>
+            <button type="button" class="color-pick" data-color="#0EA5E9,#06B6D4" style="--c1:#0EA5E9;--c2:#06B6D4" aria-label="Ciano"></button>
+            <button type="button" class="color-pick" data-color="#059669,#10B981" style="--c1:#059669;--c2:#10B981" aria-label="Esmeralda"></button>
+            <button type="button" class="color-pick" data-color="#D97706,#F59E0B" style="--c1:#D97706;--c2:#F59E0B" aria-label="Âmbar"></button>
+            <button type="button" class="color-pick" data-color="#DB2777,#EC4899" style="--c1:#DB2777;--c2:#EC4899" aria-label="Rosa"></button>
+            <button type="button" class="color-pick" data-color="#2563EB,#3B82F6" style="--c1:#2563EB;--c2:#3B82F6" aria-label="Azul"></button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Salvar pasta</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  {% include "confirma_delete.html" %}
+
+{{ notes_json|json_script:"notes-data" }}
+{{ folders|json_script:"folders-data" }}
+{{ unfiled_notes|json_script:"unfiled-notes-data" }}
+<script>
+  const root=document.documentElement;
+  const $=id=>document.getElementById(id);
+  const NOTES_BY_FOLDER=JSON.parse($('notes-data').textContent);
+  const FOLDERS=JSON.parse($('folders-data').textContent);
+  const UNFILED_NOTES=JSON.parse($('unfiled-notes-data').textContent);
+  const TOTAL_NOTAS={{ total_notes }};
+  let selectedFolderForNote=null;
+
+  /* ===== Tema claro/escuro ===== */
+  function setTheme(t){
+    root.setAttribute('data-theme',t);
+    try{localStorage.setItem('theme',t)}catch(e){}
+  }
+  function toggleTheme(){
+    setTheme(root.getAttribute('data-theme')==='dark'?'light':'dark');
+  }
+
+  /* ===== Modais ===== */
+  function openModal(id){$(id).classList.add('open')}
+  function closeModal(id){$(id).classList.remove('open')}
+  document.querySelectorAll('.overlay').forEach(o=>{
+    o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')});
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape')document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));
+  });
+
+  /* ===== Toast ===== */
+  let toastTimer;
+  function showToast(msg){
+    const t=$('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+  }
+
+  function csrfToken(){return document.cookie.split('; ').find(row=>row.startsWith('csrftoken='))?.split('=')[1]||''}
+
+  async function deleteNote(noteId){
+    if(!await askDeleteConfirmation('Excluir esta nota? Esta ação não pode ser desfeita.'))return;
+    const response=await fetch('/api/notes/'+noteId+'/',{method:'DELETE',headers:{'X-CSRFToken':csrfToken()}});
+    if(!response.ok){showToast('Não foi possível excluir a nota.');return;}
+    window.location.reload();
+  }
+
+  async function deleteFolder(slug, name){
+    if(!await askDeleteConfirmation(`Excluir a pasta "${name}"? As notas dela irão para “Notas sem pasta” e as subpastas serão preservadas.`))return;
+    const response=await fetch('/api/folders/'+encodeURIComponent(slug)+'/',{method:'DELETE',headers:{'X-CSRFToken':csrfToken()}});
+    if(!response.ok){showToast('Não foi possível excluir a pasta.');return;}
+    window.location.reload();
+  }
+
+  /* ===== Filtragem de pastas por tag ===== */
+  const searchInput=$('search-input');
+  const foldersGrid=$('folders-grid');
+  const foldersCount=$('folders-count');
+
+  function normalize(str){
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase();
+  }
+
+  function applyFilter(){
+    const q=normalize(searchInput.value);
+    const cards=foldersGrid.querySelectorAll('.folder-card');
+    const matchingNotes=[];
+    FOLDERS.forEach(folder=>{
+      (NOTES_BY_FOLDER[folder.id]||[]).forEach(note=>{
+        if(q&&normalize(note.tag||'').includes(q))matchingNotes.push({...note,folderId:folder.id,folderName:folder.name});
+      });
+    });
+    UNFILED_NOTES.forEach(note=>{
+      if(q&&normalize(note.tag||'').includes(q))matchingNotes.push({...note,folderId:'',folderName:'Sem pasta'});
+    });
+    renderTagResults(matchingNotes);
+    const matchingFolderIds=new Set(matchingNotes.map(note=>note.folderId).filter(Boolean));
+    let matches=0;
+    cards.forEach(card=>{
+      const tag=normalize(card.dataset.tag);
+      const name=normalize(card.dataset.name);
+      const match=q!==''&&(tag.includes(q)||name.includes(q)||matchingFolderIds.has(card.dataset.name));
+      card.classList.toggle('active', match);
+      if(match) matches++;
+    });
+
+    if(q){
+      foldersCount.textContent=`${matches} ${matches===1?'pasta correspondente':'pastas correspondentes'} · ${matchingNotes.length} ${matchingNotes.length===1?'nota com tag':'notas com tag'}`;
+    } else {
+      foldersCount.textContent=`${FOLDERS.length} ${FOLDERS.length===1?'pasta':'pastas'} · ${TOTAL_NOTAS} ${TOTAL_NOTAS===1?'nota':'notas'} no total`;
+    }
+    // Marca input como "tem valor" para estilização vermelha
+    searchInput.classList.toggle('has-value', !!searchInput.value.trim());
+  }
+
+  function renderTagResults(notes){
+    const section=$('tag-results');
+    const list=$('tag-result-list');
+    list.replaceChildren();
+    if(!searchInput.value.trim()||notes.length===0){section.hidden=true;return;}
+    section.hidden=false;
+    $('tag-results-count').textContent=`${notes.length} ${notes.length===1?'resultado':'resultados'}`;
+    notes.forEach(note=>{
+      const result=document.createElement('button');
+      result.type='button';
+      result.className='tag-result';
+      const title=document.createElement('span');
+      title.className='tag-result-title';
+      title.textContent=note.t||note.title;
+      const tag=document.createElement('span');
+      tag.className='tag-result-tag';
+      tag.textContent=note.tag;
+      const folder=document.createElement('span');
+      folder.className='tag-result-folder';
+      folder.textContent=note.folderName;
+      result.append(title,tag,folder);
+      result.addEventListener('click',()=>{window.location.href='editor_nota.html?id='+encodeURIComponent(note.id)});
+      list.appendChild(result);
+    });
+  }
+
+  function performSearch(){
+    applyFilter();
+    if(searchInput.value.trim()) showToast(`🔍 Filtrando por tag "${searchInput.value}"`);
+    else showToast('Filtro limpo — exibindo todas as pastas');
+  }
+
+  searchInput.addEventListener('input',applyFilter);
+  searchInput.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();performSearch()}
+  });
+
+  /* ===== Abrir pasta selecionada ===== */
+  foldersGrid.addEventListener('click',e=>{
+    const card=e.target.closest('.folder-card');
+    if(!card) return;
+    const name=card.dataset.name;
+    const tag=card.dataset.tag;
+    const count=parseInt(card.dataset.count,10);
+    const displayName=card.dataset.title||card.querySelector('.folder-name').textContent;
+
+    applyFilter();
+
+    openFolderModal(name, tag, count, displayName);
+  });
+
+  function openFolderModal(name, tag, count, displayName=name){
+    const prettyName = displayName.charAt(0).toUpperCase()+displayName.slice(1);
+    const currentFolder=FOLDERS.find(folder=>folder.id===name);
+    $('folder-modal-title').textContent=`Notas — ${prettyName}`;
+    $('folder-modal-sub').textContent=`${count} ${count===1?'nota':'notas'} · tag ${tag}`;
+    selectedFolderForNote={id:name,tag};
+    $('delete-folder-button').onclick=()=>deleteFolder(name,displayName);
+    $('edit-folder-button').onclick=()=>openFolderForm(currentFolder);
+    $('create-subfolder-button').onclick=()=>openFolderForm(null,currentFolder);
+
+    const childList=$('folder-modal-children');
+    childList.replaceChildren();
+    FOLDERS.filter(folder=>folder.parent===name).forEach(child=>{
+      const row=document.createElement('div');
+      row.className='subfolder-item';
+      const open=document.createElement('button');
+      open.type='button';
+      open.className='subfolder-open';
+      open.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><strong></strong><small></small>';
+      open.querySelector('strong').textContent=child.name;
+      open.querySelector('small').textContent=`${child.count} ${child.count===1?'nota':'notas'}`;
+      open.addEventListener('click',()=>openFolderModal(child.id,child.tag,child.count,child.name));
+      const edit=document.createElement('button');
+      edit.type='button';
+      edit.className='folder-action';
+      edit.title='Editar subpasta';
+      edit.setAttribute('aria-label','Editar subpasta '+child.name);
+      edit.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
+      edit.addEventListener('click',()=>openFolderForm(child));
+      row.append(open,edit);
+      childList.appendChild(row);
+    });
+    if(!childList.children.length){
+      const empty=document.createElement('small');
+      empty.style.color='var(--muted)';
+      empty.textContent='Nenhuma subpasta';
+      childList.appendChild(empty);
+    }
+
+    const list=$('folder-modal-notes');
+    list.innerHTML='';
+    const notes=[...(NOTES_BY_FOLDER[name]||[])];
+    const query=normalize(searchInput.value);
+    notes.sort((first,second)=>Number(normalize(second.tag||'').includes(query))-Number(normalize(first.tag||'').includes(query)));
+    if(notes.length===0)notes.push({t:'(Sem notas ainda)',e:'Use o botão abaixo para adicionar.'});
+    notes.forEach(n=>{
+      const item=document.createElement('div');
+      item.style.cssText='background:var(--kicker-bg);border:1px solid var(--border);border-radius:12px;padding:13px 15px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px';
+      item.onmouseenter=()=>{item.style.borderColor='var(--primary)'};
+      item.onmouseleave=()=>{item.style.borderColor='var(--border)'};
+      const text=document.createElement('div');
+      text.style.flex='1';
+      const title=document.createElement('div');
+      title.style.cssText='font-weight:600;font-size:.92rem;margin-bottom:3px';
+      title.textContent=n.t;
+      const preview=document.createElement('div');
+      preview.style.cssText='color:var(--muted);font-size:.82rem;line-height:1.45';
+      preview.textContent=n.e;
+      text.append(title,preview);
+      if(n.tag){
+        const tag=document.createElement('span');
+        tag.className='tag-result-tag';
+        tag.textContent=n.tag;
+        item.append(tag);
+      }
+      item.append(text);
+      if(n.id){
+        const remove=document.createElement('button');
+        remove.type='button';
+        remove.className='btn btn-danger btn-sm';
+        remove.setAttribute('aria-label','Excluir nota '+n.t);
+        remove.title='Excluir nota';
+        remove.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m2 0-.8 14H6.8L6 6m4 4v6m4-6v6"/></svg>';
+        remove.addEventListener('click',event=>{event.stopPropagation();deleteNote(n.id)});
+        item.append(remove);
+        text.addEventListener('click',()=>{window.location.href='editor_nota.html?id='+encodeURIComponent(n.id)});
+      }
+      list.appendChild(item);
+    });
+
+    openModal('modal-folder');
+  }
+
+  /* ===== Seleção de cor no modal ===== */
+  document.querySelectorAll('.color-pick').forEach(p=>{
+    p.addEventListener('click',()=>{
+      p.closest('.color-row').querySelectorAll('.color-pick').forEach(x=>x.classList.remove('active'));
+      p.classList.add('active');
+    });
+  });
+
+  function renderFolders(){
+    const grid=$('folders-grid');
+    const select=$('add-materia');
+    if(FOLDERS.length===0&&UNFILED_NOTES.length===0){
+      const empty=document.createElement('div');
+      empty.className='empty';
+      empty.innerHTML='<b>Você ainda não tem pastas</b>Crie sua primeira pasta para organizar suas notas.';
+      grid.appendChild(empty);
+    }
+    FOLDERS.filter(folder=>!folder.parent).forEach(folder=>{
+      const card=document.createElement('button');
+      card.type='button';
+      card.className='folder-card';
+      card.dataset.name=folder.id;
+      card.dataset.title=folder.name;
+      card.dataset.tag=folder.tag;
+      card.dataset.count=folder.count;
+      card.style.setProperty('--c1',folder.color_start);
+      card.style.setProperty('--c2',folder.color_end);
+      card.innerHTML='<div class="active-badge">Filtrando</div><div class="folder-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><div class="folder-body"><span class="folder-name"></span><div class="folder-meta"><span class="folder-count"></span><span class="dot"></span><span>criada por você</span></div><span class="folder-tag"></span></div><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
+      card.querySelector('.folder-name').textContent=folder.name;
+      card.querySelector('.folder-count').textContent=`${folder.count} ${folder.count===1?'nota':'notas'}`;
+      card.querySelector('.folder-tag').textContent=folder.tag;
+      grid.appendChild(card);
+      (NOTES_BY_FOLDER[folder.id]||=[]);
+    });
+    const folderNames=new Map(FOLDERS.map(folder=>[folder.id,folder.name]));
+    FOLDERS.forEach(folder=>{
+      const option=document.createElement('option');
+      option.value=folder.id;
+      option.textContent=folder.parent?`${folderNames.get(folder.parent)||''} / ${folder.name}`:folder.name;
+      select.appendChild(option);
+      (NOTES_BY_FOLDER[folder.id]||=[]);
+    });
+    renderUnfiledNotes();
+  }
+
+  function renderUnfiledNotes(){
+    if(UNFILED_NOTES.length===0)return;
+    $('unfiled-section').style.display='block';
+    $('unfiled-count').textContent=`${UNFILED_NOTES.length} ${UNFILED_NOTES.length===1?'nota':'notas'}`;
+    const list=$('unfiled-list');
+    UNFILED_NOTES.forEach(note=>{
+      const item=document.createElement('div');
+      item.className='folder-card';
+      item.style.cssText='width:100%;min-height:0;display:flex;flex-direction:row;align-items:center;gap:14px;padding:14px 18px';
+      item.style.setProperty('--c1','#0EA5E9');
+      item.style.setProperty('--c2','#06B6D4');
+      item.innerHTML='<button type="button" class="unfiled-note-open" style="display:flex;align-items:center;gap:14px;flex:1;text-align:left;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer"><span class="folder-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span class="folder-body" style="text-align:left"><span class="folder-name"></span><span class="folder-meta"></span></span></button>';
+      item.querySelector('.folder-name').textContent=note.title;
+      item.querySelector('.folder-meta').textContent=note.tag||'Sem pasta';
+      item.querySelector('.unfiled-note-open').addEventListener('click',()=>{window.location.href='editor_nota.html?id='+encodeURIComponent(note.id)});
+      const remove=document.createElement('button');
+      remove.type='button';
+      remove.className='btn btn-danger btn-sm';
+      remove.setAttribute('aria-label','Excluir nota '+note.title);
+      remove.title='Excluir nota';
+      remove.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m2 0-.8 14H6.8L6 6m4 4v6m4-6v6"/></svg>';
+      remove.addEventListener('click',()=>deleteNote(note.id));
+      item.append(remove);
+      list.appendChild(item);
+    });
+  }
+
+  let editingFolderId=null;
+  function folderDescendantIds(folderId){
+    const ids=new Set([folderId]);
+    let changed=true;
+    while(changed){
+      changed=false;
+      FOLDERS.forEach(folder=>{
+        if(ids.has(folder.parent)&&!ids.has(folder.id)){ids.add(folder.id);changed=true;}
+      });
+    }
+    return ids;
+  }
+  function openFolderForm(folder=null,parent=null){
+    editingFolderId=folder?.id||null;
+    $('form-folder-add').reset();
+    $('folder-name').value=folder?.name||'';
+    $('folder-tag').value=folder?.tag||'';
+    $('new-folder-title').textContent=folder?'Editar pasta':'Nova pasta';
+    $('folder-form-sub').textContent=folder?'Atualize os dados desta pasta.':'Crie uma pasta para organizar suas notas.';
+    const parentSelect=$('folder-parent');
+    parentSelect.replaceChildren(new Option('Nenhuma (pasta principal)',''));
+    const excluded=folder?folderDescendantIds(folder.id):new Set();
+    FOLDERS.filter(item=>!excluded.has(item.id)).forEach(item=>{
+      const option=new Option(item.parent?`${FOLDERS.find(parentItem=>parentItem.id===item.parent)?.name||''} / ${item.name}`:item.name,item.id);
+      parentSelect.appendChild(option);
+    });
+    parentSelect.value=folder?.parent||parent?.id||'';
+    const colors=folder?[folder.color_start,folder.color_end]:['#4F46E5','#7C3AED'];
+    const colorValue=colors.join(',');
+    $('folder-color-row').querySelectorAll('.color-pick').forEach(pick=>{
+      pick.classList.toggle('active',pick.dataset.color===colorValue);
+    });
+    if(!$('folder-color-row').querySelector('.color-pick.active'))$('folder-color-row').querySelector('.color-pick').classList.add('active');
+    closeModal('modal-folder');
+    closeModal('modal-add');
+    openModal('modal-folder-add');
+  }
+  $('open-folder-form').addEventListener('click',()=>openFolderForm());
+  $('create-folder-main').addEventListener('click',()=>openFolderForm());
+  $('add-note-to-folder').addEventListener('click',()=>{
+    if(!selectedFolderForNote)return;
+    $('add-materia').value=selectedFolderForNote.id;
+    $('add-tag').value=selectedFolderForNote.tag;
+  });
+  $('form-folder-add').addEventListener('submit',async event=>{
+    event.preventDefault();
+    const colors=$('folder-color-row').querySelector('.color-pick.active').dataset.color.split(',');
+    const payload={name:$('folder-name').value,tag:$('folder-tag').value,color_start:colors[0],color_end:colors[1],parent:$('folder-parent').value||null};
+    const response=await fetch(editingFolderId?'/api/folders/'+encodeURIComponent(editingFolderId)+'/':'/api/folders/',{
+      method:editingFolderId?'PATCH':'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken()},
+      body:JSON.stringify(payload)
+    });
+    const data=await response.json();
+    if(!response.ok){showToast(data.error||'Não foi possível salvar a pasta.');return;}
+    window.location.reload();
+  });
+
+  /* ===== Submit do form de nova nota ===== */
+  $('form-add').addEventListener('submit',e=>{
+    e.preventDefault();
+    const titulo=$('add-titulo').value.trim();
+    const materia=$('add-materia').value;
+    const selectedColor=$('modal-add').querySelector('.color-pick.active').dataset.color.split(',');
+    fetch('/api/notes/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken()},body:JSON.stringify({title:titulo,folder:materia||null,tag:$('add-tag').value,content:$('add-conteudo').value,color_start:selectedColor[0],color_end:selectedColor[1]})})
+      .then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error);window.location.href='editor_nota.html?id='+data.note.id})
+      .catch(error=>showToast(error.message||'Não foi possível salvar a nota.'));
+  });
+
+  /* ===== Navegação para itens futuros (toast em vez de "página não existe") ===== */
+  document.querySelectorAll('.nav-item[data-future]').forEach(item=>{
+    item.addEventListener('click',e=>{
+      e.preventDefault();
+      showToast(`🚧 Tela "${item.dataset.future}" ainda em construção`);
+    });
+  });
+
+  /* ===== Inicialização ===== */
+  // Atualiza os contadores das pastas no HTML com os valores reais do NOTES_BY_FOLDER
+  renderFolders();
+  (function initFolderCounts(){
+    document.querySelectorAll('.folder-card').forEach(card=>{
+      const name=card.dataset.name;
+      const notes=NOTES_BY_FOLDER[name]||[];
+      const realCount=notes.length;
+      card.dataset.count=String(realCount);
+      // Atualiza o texto visível (".folder-count")
+      const span=card.querySelector('.folder-count');
+      if(span) span.textContent=`${realCount} ${realCount===1?'nota':'notas'}`;
+    });
+  })();
+  applyFilter();
+</script>
+</body>
+</html>

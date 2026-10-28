@@ -1,0 +1,29 @@
+<button class="app-logout-btn" type="button" data-app-logout>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+  Sair
+</button>
+<script>
+  document.querySelectorAll('[data-app-back]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      const fallback=button.dataset.fallback||'notas.html';
+      let cameFromApp=false;
+      try{cameFromApp=!!document.referrer&&new URL(document.referrer).origin===location.origin}catch(error){}
+      if(cameFromApp&&history.length>1)history.back();
+      else location.assign(fallback);
+    });
+  });
+  document.querySelectorAll('[data-app-logout]').forEach(button=>{
+    button.addEventListener('click',async()=>{
+      button.disabled=true;
+      const token=document.cookie.split('; ').find(row=>row.startsWith('csrftoken='))?.split('=')[1]||'';
+      try{
+        const response=await fetch('/api/auth/logout/',{method:'POST',headers:{'X-CSRFToken':token}});
+        if(!response.ok)throw new Error('Não foi possível encerrar a sessão.');
+        location.replace('index.html');
+      }catch(error){
+        button.disabled=false;
+        button.title=error.message;
+      }
+    });
+  });
+</script>
