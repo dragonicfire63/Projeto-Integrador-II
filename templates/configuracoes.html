@@ -96,8 +96,8 @@
   .nav-item svg{color:var(--muted);transition:color .2s}
   .nav-item:hover{color:var(--ink);background:var(--kicker-bg)}
   .nav-item:hover svg{color:var(--link)}
-  .nav-item.active{color:var(--danger);background:var(--danger-soft)}
-  .nav-item.active svg{color:var(--danger)}
+  .nav-item.active{color:var(--primary);background:var(--kicker-bg)}
+  .nav-item.active svg{color:var(--primary)}
   @media (max-width:640px){
     .app-nav-inner{padding:6px;gap:2px}
     .nav-item{font-size:.6rem;padding:9px 4px 7px;letter-spacing:.04em}
@@ -228,7 +228,7 @@
     border-radius:11px;font:inherit;background:var(--input-bg);color:var(--ink);transition:.2s}
   .field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--ring)}
   .device{display:flex;align-items:center;gap:13px;padding:13px 0;border-top:1px solid var(--border)}
-  .device:first-of-type{border-top:none;padding-top:2px}
+  .device:first-child{border-top:none;padding-top:2px}
   .device b{display:block;font-size:.9rem}
   .device small{color:var(--muted);font-size:.78rem}
   .device .r-ic{width:36px;height:36px}
@@ -561,13 +561,6 @@
         </div>
         <label class="switch"><input type="checkbox" id="t-agenda" checked aria-label="Lembretes da agenda"><span class="track"></span></label>
       </div>
-      <div class="row">
-        <div class="row-main">
-          <span class="r-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></span>
-          <div><b>Resumo semanal</b><small>E-mail com o panorama da semana</small></div>
-        </div>
-        <label class="switch"><input type="checkbox" id="t-email" aria-label="Resumo semanal"><span class="track"></span></label>
-      </div>
     </section>
 
     <!-- ===== SEGURANÇA (sugestão) ===== -->
@@ -576,20 +569,13 @@
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Segurança
       </div>
-      <p class="panel-sub">Camadas extras de proteção para sua conta.</p>
-      <div class="row">
-        <div class="row-main">
-          <span class="r-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></span>
-          <div><b>Verificação em duas etapas</b><small>Código extra ao entrar em novo dispositivo</small></div>
-        </div>
-        <label class="switch"><input type="checkbox" id="t-2fa" aria-label="Verificação em duas etapas"><span class="track"></span></label>
-      </div>
+      <p class="panel-sub">Sua segurança em primeiro lugar.</p>
       <div class="row">
         <div class="row-main">
           <span class="r-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
-          <div><b>Sessões ativas</b><small>2 dispositivos conectados</small></div>
+          <div><b>Sessões ativas</b><small id="active-session-count">Consultando sessões...</small></div>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="openModal('modal-sessoes')">Ver dispositivos</button>
+        <button class="btn btn-outline btn-sm" id="open-sessions" type="button">Ver dispositivos</button>
       </div>
     </section>
 
@@ -634,6 +620,7 @@
     </a>
     <span class="version">Conexo · v1.0</span>
   </footer>
+  {% include "includes/ajuda.html" %}
 
   <!-- ===== Modais ===== -->
   <div class="overlay" id="modal-dados">
@@ -667,17 +654,10 @@
     <div class="modal" role="dialog" aria-modal="true">
       <button class="modal-close" onclick="closeModal('modal-sessoes')">&times;</button>
       <h2>Sessões ativas</h2>
-      <p class="modal-sub">Dispositivos conectados à sua conta.</p>
-      <div class="device">
-        <span class="r-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
-        <div class="device-main"><b>Chrome · Windows</b><small>São Paulo, BR · ativo agora</small></div>
-        <button class="btn btn-outline btn-sm" onclick="showToast('Sessão encerrada (demonstração)')">Sair</button>
-      </div>
-      <div class="device">
-        <span class="r-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
-        <div class="device-main"><b>App Conexo · Android</b><small>São Paulo, BR · ontem às 22:14</small></div>
-        <button class="btn btn-outline btn-sm" onclick="showToast('Sessão encerrada (demonstração)')">Sair</button>
-      </div>
+      <p class="modal-sub">Sessões conectadas à sua conta neste navegador ou em outros.</p>
+      <div id="sessions-loading" class="modal-sub" role="status">Carregando sessões...</div>
+      <div id="sessions-list"></div>
+      <p id="sessions-empty" class="modal-sub" hidden>Nenhuma sessão ativa encontrada.</p>
     </div>
   </div>
 
@@ -708,7 +688,7 @@
   const $=id=>document.getElementById(id);
 
   /* ===== Preferências persistidas ===== */
-  let prefs={accent:'indigo',font:1,contrast:false,motion:false,autoBackup:true,freq:'diaria',agenda:true,email:false,twofa:false,lang:'pt',...JSON.parse($('preferences-data').textContent)};
+  let prefs={accent:'indigo',font:1,contrast:false,motion:false,autoBackup:true,freq:'diaria',agenda:true,lang:'pt',...JSON.parse($('preferences-data').textContent)};
   const csrfToken=()=>document.cookie.split('; ').find(row=>row.startsWith('csrftoken='))?.split('=')[1]||'';
   const savePrefs=()=>fetch('/api/preferences/',{method:'PATCH',headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken()},body:JSON.stringify(prefs)});
 
@@ -780,6 +760,73 @@
     const t=$('toast'); t.textContent=msg; t.classList.add('show');
     clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
   }
+
+  function formatSessionCount(count){
+    if(document.documentElement.lang==='en')return `${count} active session${count===1?'':'s'}`;
+    return `${count} ${count===1?'sessão ativa':'sessões ativas'}`;
+  }
+  async function loadSessions(quiet=false){
+    const loading=$('sessions-loading');
+    const list=$('sessions-list');
+    const empty=$('sessions-empty');
+    loading.hidden=false;
+    list.replaceChildren();
+    empty.hidden=true;
+    try{
+      const response=await fetch('/api/account/sessions/');
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error||'Não foi possível carregar as sessões.');
+      $('active-session-count').textContent=formatSessionCount(data.sessions.length);
+      loading.hidden=true;
+      if(!data.sessions.length){empty.hidden=false;return;}
+      data.sessions.forEach(session=>{
+        const row=document.createElement('div');
+        row.className='device';
+        const icon=document.createElement('span');
+        icon.className='r-ic';
+        icon.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>';
+        const details=document.createElement('div');
+        details.className='device-main';
+        const label=document.createElement('b');
+        label.textContent=session.current?'Este dispositivo':'Outra sessão';
+        const expiry=document.createElement('small');
+        expiry.textContent=`Expira em ${new Date(session.expires_at).toLocaleString()}`;
+        details.append(label,expiry);
+        const endButton=document.createElement('button');
+        endButton.type='button';
+        endButton.className='btn btn-outline btn-sm';
+        endButton.textContent='Encerrar sessão';
+        endButton.addEventListener('click',()=>endSession(session.id,session.current,endButton));
+        row.append(icon,details,endButton);
+        list.appendChild(row);
+      });
+    }catch(error){
+      loading.hidden=true;
+      if(!quiet)showToast(error.message||'Não foi possível carregar as sessões.');
+    }
+  }
+
+  async function endSession(sessionId,isCurrent,button){
+    button.disabled=true;
+    try{
+      const response=await fetch('/api/account/sessions/'+encodeURIComponent(sessionId)+'/',{
+        method:'DELETE',headers:{'X-CSRFToken':csrfToken()}
+      });
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error||'Não foi possível encerrar a sessão.');
+      if(isCurrent){window.location.assign('/');return;}
+      showToast('Sessão encerrada.');
+      await loadSessions();
+    }catch(error){
+      button.disabled=false;
+      showToast(error.message||'Não foi possível encerrar a sessão.');
+    }
+  }
+  $('open-sessions').addEventListener('click',()=>{
+    openModal('modal-sessoes');
+    loadSessions();
+  });
+  document.addEventListener('DOMContentLoaded',()=>loadSessions(true),{once:true});
 
   /* ===== Backup ===== */
   const formatBytes=value=>{
@@ -937,9 +984,19 @@
   $('t-motion').addEventListener('change',e=>{applyMotion(e.target.checked);if(e.target.checked)showToast('Animações reduzidas')});
   $('t-autobackup').addEventListener('change',e=>{prefs.autoBackup=e.target.checked;savePrefs();showToast('Backup automático '+(e.target.checked?'ativado':'desativado'))});
   $('s-freq').addEventListener('change',async e=>{prefs.freq=e.target.value;const response=await savePrefs();if(!response.ok)showToast('Não foi possível salvar a frequência.');else showToast('Frequência salva')});
-  $('t-agenda').addEventListener('change',e=>{prefs.agenda=e.target.checked;savePrefs()});
-  $('t-email').addEventListener('change',e=>{prefs.email=e.target.checked;savePrefs()});
-  $('t-2fa').addEventListener('change',e=>{prefs.twofa=e.target.checked;savePrefs();showToast('Verificação em duas etapas '+(e.target.checked?'ativada':'desativada'))});
+  $('t-agenda').addEventListener('change',async e=>{
+    const enabled=e.target.checked;
+    prefs.agenda=enabled;
+    try{
+      const response=await savePrefs();
+      if(!response.ok)throw new Error('Não foi possível salvar os lembretes da agenda.');
+      showToast(enabled?'Lembretes da agenda ativados.':'Lembretes da agenda desativados.');
+    }catch(error){
+      e.target.checked=!enabled;
+      prefs.agenda=!enabled;
+      showToast(error.message||'Não foi possível salvar os lembretes da agenda.');
+    }
+  });
   $('s-lang').addEventListener('change',async e=>{
     prefs.lang=e.target.value==='en'?'en':'pt';
     const response=await savePrefs();
@@ -967,7 +1024,7 @@
   });
 
   /* ===== Inicialização ===== */
-  ['autoBackup:t-autobackup','agenda:t-agenda','email:t-email','twofa:t-2fa'].forEach(par=>{
+  ['autoBackup:t-autobackup','agenda:t-agenda'].forEach(par=>{
     const[k,id]=par.split(':'); $(id).checked=!!prefs[k];
   });
   $('s-freq').value=prefs.freq; $('s-lang').value=prefs.lang==='en'?'en':'pt'; $('r-font').value=prefs.font;

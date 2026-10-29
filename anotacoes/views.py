@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import json
 import re
 from datetime import date, datetime, time
@@ -8,11 +10,13 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.sessions.models import Session
 from django.db import transaction
 from django.forms import ImageField
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.text import slugify
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -132,10 +136,12 @@ def page(template_name):
     def render_page(request):
         context = _page_note_context(request.user)
         if template_name == "calendario.html":
+            preference, _ = UserPreference.objects.get_or_create(user=request.user)
             context["events_json"] = [_event_data(event) for event in CalendarEvent.objects.filter(user=request.user)]
             context["categories_json"] = [
                 _category_data(item) for item in CalendarCategory.objects.filter(user=request.user)
             ]
+            context["agenda_notifications_enabled"] = preference.values.get("agenda", True)
         return render(request, template_name, context)
     return render_page
 
@@ -762,8 +768,12 @@ def profile_image_api(request):
 def account_api(request):
     if request.method == "DELETE":
         user = request.user
+        preference = UserPreference.objects.filter(user=user).only("profile_image").first()
+        profile_image = preference.profile_image if preference and preference.profile_image else None
         auth_logout(request)
         user.delete()
+        if profile_image:
+            profile_image.storage.delete(profile_image.name)
         return JsonResponse({"ok": True, "redirect": "/"})
     data = _json_body(request)
     if data is None:
@@ -777,6 +787,38 @@ def account_api(request):
     request.user.username = email
     request.user.save(update_fields=["first_name", "email", "username"])
     return JsonResponse({"name": request.user.first_name, "email": request.user.email})
+
+
+def _session_identifier(session_key):
+    return hmac.new(settings.SECRET_KEY.encode(), session_key.encode(), hashlib.sha256).hexdigest()
+
+
+@login_required
+@require_http_methods(["GET", "DELETE"])
+def account_sessions_api(request, session_id=None):
+    active_sessions = Session.objects.filter(expire_date__gt=timezone.now())
+    owned_sessions = []
+    user_id = str(request.user.pk)
+    for session in active_sessions.iterator():
+        if session.get_decoded().get("_auth_user_id") == user_id:
+            owned_sessions.append(session)
+
+    if request.method == "GET":
+        current_key = request.session.session_key
+        return JsonResponse({"sessions": [{
+            "id": _session_identifier(session.session_key),
+            "current": session.session_key == current_key,
+            "expires_at": session.expire_date.isoformat(),
+        } for session in owned_sessions]})
+
+    for session in owned_sessions:
+        if hmac.compare_digest(_session_identifier(session.session_key), session_id or ""):
+            is_current = session.session_key == request.session.session_key
+            session.delete()
+            if is_current:
+                auth_logout(request)
+            return JsonResponse({"ok": True, "current": is_current})
+    return _error("Sessão não encontrada.", 404)
 
 
 @login_required

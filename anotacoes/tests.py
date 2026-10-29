@@ -26,6 +26,46 @@ class BackendFlowTests(TestCase):
         self.assertEqual(response.json()["redirect"], "/")
         self.assertEqual(self.client.get("/notas.html").status_code, 302)
 
+    def test_account_sessions_can_be_listed_and_revoked(self):
+        self.client.force_login(self.user)
+        current_session = self.client.session.session_key
+        other_client = self.client_class()
+        other_client.force_login(self.user)
+        other_session = other_client.session.session_key
+
+        response = self.client.get("/api/account/sessions/")
+        self.assertEqual(response.status_code, 200)
+        sessions = response.json()["sessions"]
+        self.assertEqual(len(sessions), 2)
+        current = next(item for item in sessions if item["current"])
+        other = next(item for item in sessions if not item["current"])
+        self.assertNotIn(current_session, [item["id"] for item in sessions])
+        self.assertNotIn(other_session, [item["id"] for item in sessions])
+
+        revoked = self.client.delete(f"/api/account/sessions/{other['id']}/")
+        self.assertEqual(revoked.status_code, 200)
+        self.assertFalse(revoked.json()["current"])
+        self.assertEqual(other_client.get("/notas.html").status_code, 302)
+        self.assertEqual(len(self.client.get("/api/account/sessions/").json()["sessions"]), 1)
+
+    def test_settings_page_shows_live_session_count_placeholder(self):
+        self.client.force_login(self.user)
+        response = self.client.get("/configuracoes.html")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="active-session-count"')
+        self.assertContains(response, "Consultando sessões...")
+
+    def test_account_cannot_revoke_another_users_session(self):
+        other_client = self.client_class()
+        other_user = User.objects.create_user(username="sessions-other@example.com", password="senha-forte-123")
+        other_client.force_login(other_user)
+        other_session = other_client.session.session_key
+
+        self.client.force_login(self.user)
+        response = self.client.delete(f"/api/account/sessions/{other_session}/")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(other_client.get("/notas.html").status_code, 200)
+
     def test_registration_creates_authenticated_account(self):
         response = self.client.post("/api/auth/register/", data=json.dumps({
             "name": "Beatriz", "email": "bia@example.com", "password": "senha-forte-123",
@@ -47,6 +87,31 @@ class BackendFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["redirect"], "/")
         self.assertFalse(User.objects.filter(id=self.user.id).exists())
+
+    def test_account_deletion_removes_its_profile_image_only(self):
+        other_user = User.objects.create_user(username="foto-outra@example.com", password="senha-forte-123")
+        image_data = io.BytesIO()
+        PillowImage.new("RGB", (2, 2), color="red").save(image_data, format="PNG")
+
+        def image_file(name):
+            return SimpleUploadedFile(name, image_data.getvalue(), content_type="image/png")
+
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            preference = UserPreference.objects.create(user=self.user)
+            preference.profile_image.save("ana.png", image_file("ana.png"), save=True)
+            other_preference = UserPreference.objects.create(user=other_user)
+            other_preference.profile_image.save("outra.png", image_file("outra.png"), save=True)
+            deleted_image = preference.profile_image.name
+            retained_image = other_preference.profile_image.name
+            storage = preference.profile_image.storage
+
+            self.client.force_login(self.user)
+            response = self.client.delete("/api/account/")
+
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(User.objects.filter(id=self.user.id).exists())
+            self.assertFalse(storage.exists(deleted_image))
+            self.assertTrue(storage.exists(retained_image))
 
     def test_user_can_upload_and_replace_profile_image(self):
         self.client.force_login(self.user)
@@ -347,6 +412,14 @@ class BackendFlowTests(TestCase):
         category_ids = [category["id"] for category in response.context["categories_json"]]
         self.assertEqual(category_ids, [custom.slug])
 
+    def test_calendar_page_receives_saved_agenda_reminder_preference(self):
+        self.client.force_login(self.user)
+        UserPreference.objects.create(user=self.user, values={"agenda": False})
+        response = self.client.get("/calendario.html")
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["agenda_notifications_enabled"])
+        self.assertContains(response, 'id="agenda-notifications-data"')
+
     def test_calendar_starts_without_predefined_categories_and_accepts_uncategorized_event(self):
         self.client.force_login(self.user)
         page = self.client.get("/calendario.html")
@@ -634,6 +707,7 @@ class BackendFlowTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, 'id="accent-preference-data"')
                 self.assertContains(response, 'id="language-preference-data"')
+                self.assertContains(response, 'id="app-help-dialog"')
 
     def test_folder_names_are_unique_per_user_and_not_shared(self):
         self.client.force_login(self.user)

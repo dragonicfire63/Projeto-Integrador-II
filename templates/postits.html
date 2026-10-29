@@ -98,8 +98,8 @@
   .nav-item svg{color:var(--muted);transition:color .2s}
   .nav-item:hover{color:var(--ink);background:var(--kicker-bg)}
   .nav-item:hover svg{color:var(--link)}
-  .nav-item.active{color:var(--danger);background:var(--danger-soft)}
-  .nav-item.active svg{color:var(--danger)}
+  .nav-item.active{color:var(--primary);background:var(--kicker-bg)}
+  .nav-item.active svg{color:var(--primary)}
 
   /* ===== Cabeçalho ===== */
   .page-head{max-width:1080px;width:100%;margin:0 auto;padding:22px 24px 0;
@@ -437,12 +437,13 @@
   </button>
 
   <footer>
-    <a href="#" class="help" onclick="event.preventDefault();showToast('Central de ajuda (demonstração)')">
+    <a href="#" class="help">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
       Ajuda
     </a>
     <span class="version">Conexo · v1.0</span>
   </footer>
+  {% include "includes/ajuda.html" %}
 
   <!-- ===== Modal: criar/editar post-it ===== -->
   <div class="overlay" id="modal-postit">

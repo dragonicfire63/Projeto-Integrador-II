@@ -35,6 +35,8 @@ urlpatterns = [
     path("api/backup/google/backup/", views.google_drive_backup_api, name="api_google_drive_backup"),
     path("api/backup/google/restore/", views.google_drive_restore_api, name="api_google_drive_restore"),
     path("api/account/profile-image/", views.profile_image_api, name="api_profile_image"),
+    path("api/account/sessions/", views.account_sessions_api, name="api_account_sessions"),
+    path("api/account/sessions/<str:session_id>/", views.account_sessions_api, name="api_account_session_detail"),
     path("api/account/", views.account_api, name="api_account"),
     path("api/account/password/", views.password_api, name="api_password"),
 ]

@@ -105,8 +105,8 @@
   .nav-item svg{color:var(--muted);transition:color .2s}
   .nav-item:hover{color:var(--ink);background:var(--kicker-bg)}
   .nav-item:hover svg{color:var(--link)}
-  .nav-item.active{color:var(--danger);background:var(--danger-soft)}
-  .nav-item.active svg{color:var(--danger)}
+  .nav-item.active{color:var(--primary);background:var(--kicker-bg)}
+  .nav-item.active svg{color:var(--primary)}
 
   /* ===== Cabeçalho da página ===== */
   .page-head{max-width:1080px;width:100%;margin:0 auto;padding:22px 24px 0;
@@ -616,12 +616,13 @@
   </button>
 
   <footer>
-    <a href="#" class="help" onclick="event.preventDefault();showToast('Central de ajuda (demonstração)')">
+    <a href="#" class="help">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
       Ajuda
     </a>
     <span class="version">Conexo · v1.0</span>
   </footer>
+  {% include "includes/ajuda.html" %}
 
   <!-- ===== Modal: criar/editar evento ===== -->
   <div class="overlay" id="modal-event">
@@ -827,6 +828,7 @@
 {{ folders_json|json_script:"folders-data" }}
 {{ events_json|json_script:"events-data" }}
 {{ categories_json|json_script:"categories-data" }}
+{{ agenda_notifications_enabled|json_script:"agenda-notifications-data" }}
 <script>
   const root=document.documentElement;
   const $=id=>document.getElementById(id);
@@ -878,6 +880,7 @@
   const TODAY=new Date();
   TODAY.setHours(0,0,0,0);
   let events=JSON.parse($('events-data').textContent);
+  const agendaNotificationsEnabled=JSON.parse($('agenda-notifications-data').textContent);
 
   /* ===== Estado do calendário ===== */
   const WEEKDAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -1371,6 +1374,7 @@
     rememberNotifiedEvent(key);
   }
   function checkEventNotifications(){
+    if(!agendaNotificationsEnabled)return;
     const now=Date.now();
     events.forEach(event=>{
       const settings=event.notif||{};
@@ -1524,7 +1528,7 @@
     };
     if(!newEv.title){showToast('⚠️ Dê um título ao evento');return;}
     try{
-      if(newEv.notif.on&&'Notification' in window&&Notification.permission==='default')await requestNotificationPermission();
+      if(agendaNotificationsEnabled&&newEv.notif.on&&'Notification' in window&&Notification.permission==='default')await requestNotificationPermission();
       if(newEv.notif.sound)await unlockNotificationAudio();
       const response=await fetch(editingId?'/api/events/'+editingId+'/':'/api/events/',{method:editingId?'PATCH':'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken()},body:JSON.stringify(newEv)});
       const result=await response.json();

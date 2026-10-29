@@ -1,0 +1,71 @@
+<style>
+  .help-dialog{width:min(92vw,480px);max-height:85vh;margin:auto;padding:26px;background:var(--surface);
+    color:var(--ink);border:1px solid var(--border);border-radius:16px;box-shadow:var(--card-shadow)}
+  .help-dialog::backdrop{background:rgba(10,10,25,.58);backdrop-filter:blur(4px)}
+  .help-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+  .help-dialog h2{font-size:1.15rem;font-weight:700}
+  .help-dialog p{color:var(--muted);font-size:.88rem;line-height:1.55;margin:0 0 16px}
+  .help-dialog ul{display:grid;gap:10px;padding-left:20px;color:var(--ink);font-size:.88rem;line-height:1.5}
+  .help-dialog li::marker{color:var(--primary)}
+  .help-close{width:34px;height:34px;flex:0 0 34px;border:1px solid var(--border);border-radius:50%;
+    background:var(--close-bg);color:var(--muted);font:inherit;font-size:1.2rem;cursor:pointer}
+  .help-close:hover{color:var(--ink);background:var(--close-hover)}
+</style>
+
+<dialog class="help-dialog" id="app-help-dialog" aria-labelledby="app-help-title" aria-describedby="app-help-description">
+  <div class="help-dialog-head">
+    <h2 id="app-help-title">Ajuda</h2>
+    <button class="help-close" type="button" aria-label="Fechar ajuda">&times;</button>
+  </div>
+  <p id="app-help-description"></p>
+  <ul id="app-help-tips"></ul>
+</dialog>
+
+<script>
+  (function(){
+    const dialog=document.getElementById('app-help-dialog');
+    const page=location.pathname.split('/').pop()||'index.html';
+    const helpText={
+      'index.html':{
+        pt:['Acesse sua conta ou crie uma nova para começar.','Escolha “Entrar” para continuar com uma conta existente.','Use o botão de tema para alternar entre claro e escuro.'],
+        en:['Sign in or create an account to get started.','Choose “Sign in” to continue with an existing account.','Use the theme button to switch between light and dark.']
+      },
+      'notas.html':{
+        pt:['Use o botão + para criar uma nota ou pasta.','Abra uma pasta para ver, editar ou organizar suas notas.','Pesquise por uma tag para encontrar notas rapidamente.'],
+        en:['Use the + button to create a note or folder.','Open a folder to view, edit, or organize its notes.','Search by tag to find notes quickly.']
+      },
+      'calendario.html':{
+        pt:['Selecione um dia e use “Novo evento” para adicionar um compromisso.','Crie categorias para organizar seus eventos.','Ative lembretes no formulário do evento para receber notificações.'],
+        en:['Select a day and choose “New event” to add an appointment.','Create categories to organize your events.','Enable reminders in the event form to receive notifications.']
+      },
+      'postits.html':{
+        pt:['Use o botão + para criar um recado.','Vincule notas, pastas ou eventos para acessá-los pelo Post-it.','Clique em um Post-it para editar ou abrir seus vínculos.'],
+        en:['Use the + button to create a reminder.','Link notes, folders, or events for quick access from a sticky note.','Click a sticky note to edit it or open its links.']
+      },
+      'editor_nota.html':{
+        pt:['O conteúdo é salvo automaticamente enquanto você escreve.','Use a barra para formatar o texto e ajustar a aparência.','Vincule Post-its à nota para guardar lembretes relacionados.'],
+        en:['Your content is saved automatically as you write.','Use the toolbar to format text and adjust its appearance.','Link sticky notes to keep related reminders with the note.']
+      },
+      'configuracoes.html':{
+        pt:['Ajuste aparência, idioma e acessibilidade para sua conta.','Escolha a ordem e a visualização das notas.','Exporte um backup para guardar uma cópia dos seus dados.'],
+        en:['Adjust appearance, language, and accessibility for your account.','Choose the order and view for your notes.','Export a backup to keep a copy of your data.']
+      }
+    };
+    const content=helpText[page]||helpText['index.html'];
+    document.querySelectorAll('.help').forEach(button=>button.addEventListener('click',event=>{
+      event.preventDefault();
+      const english=document.documentElement.lang==='en';
+      document.getElementById('app-help-title').textContent=english?'Quick help':'Ajuda rápida';
+      document.getElementById('app-help-description').textContent=english?'Here are a few tips for this page.':'Veja algumas dicas para esta página.';
+      document.getElementById('app-help-tips').replaceChildren(...content[english?'en':'pt'].map(tip=>{
+        const item=document.createElement('li');
+        item.textContent=tip;
+        return item;
+      }));
+      dialog.showModal();
+    }));
+    dialog.querySelector('.help-close').addEventListener('click',()=>dialog.close());
+    dialog.addEventListener('keydown',event=>{if(event.key==='Escape')dialog.close()});
+    dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
+  })();
+</script>
