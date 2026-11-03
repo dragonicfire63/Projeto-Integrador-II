@@ -1,10 +1,12 @@
 import hashlib
 import hmac
+import html
 import json
 import re
 from datetime import date, datetime, time
 
 import bleach
+from bleach.css_sanitizer import CSSSanitizer
 from django.conf import settings
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
@@ -31,6 +33,52 @@ from .google_drive import (
 from .models import CalendarCategory, CalendarEvent, Folder, GoogleDriveConnection, Note, PostIt, UserPreference
 
 HEX_COLOR = re.compile(r"^#[0-9A-Fa-f]{6}$")
+NOTE_FONT_FAMILIES = {
+    "Arial,Helvetica,sans-serif",
+    "'Poppins',sans-serif",
+    "Georgia,'Times New Roman',serif",
+    "'Courier New',Courier,monospace",
+}
+NOTE_FONT_SIZES = {8, 10, 11, 12, 14, 16, 18, 20, 24, 28}
+DEFAULT_NOTE_FORMATTING = {
+    "fontFamily": "Arial,Helvetica,sans-serif",
+    "fontSize": 12,
+    "textColor": "#1E1B4B",
+}
+NOTE_CONTENT_CSS = CSSSanitizer(allowed_css_properties=["color"])
+
+
+def _clean_note_content(content):
+    return bleach.clean(
+        content or "",
+        tags=["p", "br", "b", "strong", "i", "em", "u", "h2", "h3", "ul", "ol", "li", "span"],
+        attributes={"span": ["style"]},
+        css_sanitizer=NOTE_CONTENT_CSS,
+        strip=True,
+    )
+
+
+def _note_formatting(value, fallback=None):
+    formatting = DEFAULT_NOTE_FORMATTING.copy()
+    if isinstance(fallback, dict):
+        formatting.update({key: fallback[key] for key in formatting if key in fallback})
+    if not isinstance(value, dict):
+        return formatting
+    family = value.get("fontFamily", formatting["fontFamily"])
+    if family in NOTE_FONT_FAMILIES:
+        formatting["fontFamily"] = family
+    try:
+        size = int(value.get("fontSize", formatting["fontSize"]))
+    except (TypeError, ValueError):
+        size = formatting["fontSize"]
+    if size in NOTE_FONT_SIZES:
+        formatting["fontSize"] = size
+    color = str(value.get("textColor", formatting["textColor"]))
+    if re.fullmatch(r"#[0-9A-Fa-f]{3}", color):
+        color = "#" + "".join(character * 2 for character in color[1:])
+    if HEX_COLOR.fullmatch(color):
+        formatting["textColor"] = color.upper()
+    return formatting
 
 
 def _json_body(request):
@@ -54,11 +102,12 @@ def notes_page(request):
     folders = {}
     notes = Note.objects.filter(user=request.user)
     for note in notes.exclude(folder=""):
+        preview = _note_preview(note.content)
         folders.setdefault(note.folder, []).append({
             "id": note.id,
             "t": note.title,
-            "e": note.content[:180],
-            "p": note.content[:180],
+            "e": preview,
+            "p": preview,
             "tag": note.tag,
             "created_at": note.created_at.isoformat(),
             "updated_at": note.updated_at.isoformat(),
@@ -77,7 +126,7 @@ def _page_note_context(user):
     folders = {}
     notes = Note.objects.filter(user=user)
     for note in notes.exclude(folder=""):
-        preview = bleach.clean(note.content, tags=[], strip=True)[:180]
+        preview = _note_preview(note.content)
         folders.setdefault(note.folder, []).append({
             "id": note.id, "t": note.title, "title": note.title,
             "e": preview, "p": preview, "tag": note.tag,
@@ -89,6 +138,11 @@ def _page_note_context(user):
     }
 
 
+def _note_preview(content):
+    plain_text = bleach.clean(content or "", tags=[], strip=True)
+    return " ".join(html.unescape(plain_text).split())[:180]
+
+
 @login_required
 def editor_page(request):
     note = None
@@ -98,7 +152,7 @@ def editor_page(request):
         note = get_object_or_404(Note, id=note_id, user=request.user)
         folder = Folder.objects.filter(user=request.user, slug=note.folder).first()
     if note:
-        note.content = bleach.clean(note.content, tags=["p", "br", "b", "strong", "i", "em", "u", "h2", "h3", "ul", "ol", "li"], attributes={}, strip=True)
+        note.content = _clean_note_content(note.content)
     linked_postits = []
     if note:
         note_ref = {"type": "note", "folderId": note.folder or None, "title": note.title}
@@ -125,6 +179,7 @@ def editor_page(request):
     linked_postits.sort(key=lambda item: item["created_at"], reverse=True)
     return render(request, "editor_nota.html", {
         "note": note,
+        "note_formatting": _note_formatting(note.formatting if note else None),
         "folder": folder,
         "folders_json": [_folder_data(item) for item in Folder.objects.filter(user=request.user)],
         "linked_postits": linked_postits,
@@ -206,6 +261,7 @@ def _note_data(note):
         "tag": note.tag,
         "title": note.title,
         "content": note.content,
+        "formatting": _note_formatting(note.formatting),
         "color_start": note.color_start,
         "color_end": note.color_end,
         "created_at": note.created_at.isoformat(),
@@ -337,6 +393,7 @@ def notes_api(request):
         tag=str(data.get("tag", ""))[:80],
         title=str(data["title"]).strip()[:180],
         content=str(data.get("content", "")),
+        formatting=_note_formatting(data.get("formatting")),
         color_start=str(data.get("color_start", "#4F46E5"))[:7],
         color_end=str(data.get("color_end", "#7C3AED"))[:7],
     )
@@ -363,6 +420,8 @@ def note_detail_api(request, note_id):
             setattr(note, field, value[:limit])
     if "content" in data:
         note.content = str(data["content"])
+    if "formatting" in data:
+        note.formatting = _note_formatting(data["formatting"], note.formatting)
     if not note.title.strip():
         return _error("O título da nota é obrigatório.")
     note.save()
@@ -617,12 +676,8 @@ def _restore_backup(user, data):
             return _error("O backup contém cores de anotação inválidas.")
         normalized_notes.append({
             "title": title, "folder": folder, "tag": str(item.get("tag", ""))[:80],
-            "content": bleach.clean(
-                str(item.get("content", "")),
-                tags=["p", "br", "b", "strong", "i", "em", "u", "h2", "h3", "ul", "ol", "li"],
-                attributes={},
-                strip=True,
-            ),
+            "formatting": _note_formatting(item.get("formatting")),
+            "content": _clean_note_content(str(item.get("content", ""))),
             "color_start": start, "color_end": end,
         })
 

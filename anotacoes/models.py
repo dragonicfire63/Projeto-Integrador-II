@@ -26,6 +26,7 @@ class Note(models.Model):
     tag = models.CharField(max_length=80, blank=True)
     title = models.CharField(max_length=180)
     content = models.TextField(blank=True)
+    formatting = models.JSONField(default=dict, blank=True)
     color_start = models.CharField(max_length=7, default="#4F46E5")
     color_end = models.CharField(max_length=7, default="#7C3AED")
     created_at = models.DateTimeField(auto_now_add=True)

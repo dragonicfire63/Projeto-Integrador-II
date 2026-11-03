@@ -169,11 +169,12 @@
   /* Seletor de cor (A com sublinhado) */
   .color-pop{position:relative}
   .color-swatch{width:38px;height:38px;border-radius:10px;border:1.5px solid transparent;
-    background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    background:transparent;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;
     position:relative;transition:.18s}
+  [data-theme="dark"] .color-swatch{color:#fff}
   .color-swatch:hover{background:var(--tool-hover-bg);border-color:var(--border)}
   .color-swatch .underline-bar{position:absolute;bottom:8px;left:9px;right:9px;height:3px;
-    border-radius:2px;background:#E11D48;transition:background .2s}
+    border-radius:2px;background:var(--selected-text-color,#1E1B4B);transition:background .2s}
   .color-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);
     border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 40px -15px rgba(0,0,0,.3);
     padding:12px;display:none;z-index:40;width:184px}
@@ -498,7 +499,7 @@
       <div class="tool-group">
         <button class="tool-btn" id="btn-bold" aria-pressed="false" aria-label="Negrito" title="Negrito (Ctrl+B)" style="font-weight:800">B</button>
         <button class="tool-btn" id="btn-italic" aria-pressed="false" aria-label="Itálico" title="Itálico (Ctrl+I)" style="font-style:italic;font-family:Georgia,serif">I</button>
-        <button class="tool-btn" id="btn-underline" aria-pressed="false" aria-label="Sublinhado" title="Sublinhado (Ctrl+U)" style="text-decoration:underline;text-decoration-color:var(--danger);text-decoration-thickness:2px">U</button>
+        <button class="tool-btn" id="btn-underline" aria-pressed="false" aria-label="Sublinhado" title="Sublinhado (Ctrl+U)" style="text-decoration:underline;text-decoration-color:#fff;text-decoration-thickness:2px">U</button>
       </div>
 
       <!-- Grupo 4: Cor do texto (A com sublinhado colorido) -->
@@ -522,7 +523,7 @@
             <button class="color-cell" data-color="#0EA5E9" style="background:#0EA5E9" aria-label="Ciano"></button>
             <button class="color-cell" data-color="#84CC16" style="background:#84CC16" aria-label="Lima"></button>
             <button class="color-cell" data-color="#78716C" style="background:#78716C" aria-label="Cinza"></button>
-            <button class="color-cell" data-color="#fff" style="background:#fff;border-color:#888" aria-label="Branco"></button>
+            <button class="color-cell" data-color="#FFFFFF" style="background:#fff;border-color:#888" aria-label="Branco"></button>
             <button class="color-cell" data-color="#A78BFA" style="background:#A78BFA" aria-label="Lilás"></button>
           </div>
         </div>
@@ -688,11 +689,13 @@
   {% include "confirma_delete.html" %}
 
 {{ folders_json|json_script:"folders-data" }}
+{{ note_formatting|json_script:"note-formatting-data" }}
 <script>
   const root=document.documentElement;
   const $=id=>document.getElementById(id);
   const editor=$('editor');
   const FOLDERS=JSON.parse($('folders-data').textContent);
+  const savedFormatting=JSON.parse($('note-formatting-data').textContent);
   const folderSelect=$('folder-select');
   FOLDERS.forEach(folder=>{
     const option=document.createElement('option');
@@ -915,19 +918,28 @@
 
   /* ===== Fonte: dropdown ===== */
   const fontSelect=$('font-select'), fontMenu=$('font-menu'), fontPreview=$('font-preview');
+  const fontOptions=[...fontMenu.querySelectorAll('.font-opt')];
+  const FONT_MAP={8:'0.65rem',10:'0.78rem',11:'0.85rem',12:'1rem',14:'1.15rem',16:'1.3rem',18:'1.45rem',20:'1.6rem',24:'1.85rem',28:'2.1rem'};
+  const DEFAULT_FONT=fontOptions[0].dataset.font;
+  let fontFamily=fontOptions.some(option=>option.dataset.font===savedFormatting.fontFamily)?savedFormatting.fontFamily:DEFAULT_FONT;
+  let fontSize=Number(FONT_MAP[savedFormatting.fontSize]?savedFormatting.fontSize:12);
+  let selectedTextColor=/^#[0-9A-Fa-f]{6}$/.test(savedFormatting.textColor||'')?savedFormatting.textColor:'#1E1B4B';
+  function applyFontFamily(family){
+    const option=fontOptions.find(item=>item.dataset.font===family)||fontOptions[0];
+    fontFamily=option.dataset.font;
+    editor.style.fontFamily=fontFamily;
+    fontPreview.textContent=option.querySelector('span').textContent;
+    fontPreview.style.fontFamily=fontFamily;
+    fontOptions.forEach(item=>item.classList.toggle('active',item===option));
+  }
   fontSelect.addEventListener('click',e=>{
     e.stopPropagation();
     const open=fontMenu.classList.toggle('open');
     fontSelect.setAttribute('aria-expanded',open);
   });
-  fontMenu.querySelectorAll('.font-opt').forEach(opt=>{
+  fontOptions.forEach(opt=>{
     opt.addEventListener('click',()=>{
-      const f=opt.dataset.font;
-      editor.style.fontFamily=f;
-      fontPreview.textContent=opt.querySelector('span').textContent;
-      fontPreview.style.fontFamily=f;
-      fontMenu.querySelectorAll('.font-opt').forEach(o=>o.classList.remove('active'));
-      opt.classList.add('active');
+      applyFontFamily(opt.dataset.font);
       fontMenu.classList.remove('open');
       fontSelect.setAttribute('aria-expanded',false);
       markSaved();
@@ -936,9 +948,7 @@
   });
 
   /* ===== Tamanho: stepper −/12/+ ===== */
-  let fontSize=12;
   const sizeVal=$('size-val');
-  const FONT_MAP={8:'0.65rem',10:'0.78rem',11:'0.85rem',12:'1rem',14:'1.15rem',16:'1.3rem',18:'1.45rem',20:'1.6rem',24:'1.85rem',28:'2.1rem'};
   function applyFontSize(){
     editor.style.fontSize=FONT_MAP[fontSize]||'1rem';
     sizeVal.textContent=fontSize;
@@ -976,6 +986,11 @@
 
   /* ===== Cor do texto ===== */
   const colorBtn=$('color-btn'), colorMenu=$('color-menu'), colorBar=$('color-bar');
+  function applyToolbarTextColor(color){
+    selectedTextColor=color;
+    colorBtn.style.setProperty('--selected-text-color',color);
+    colorMenu.querySelectorAll('.color-cell').forEach(cell=>cell.classList.toggle('active',cell.dataset.color.toLowerCase()===color.toLowerCase()));
+  }
   colorBtn.addEventListener('click',e=>{
     e.stopPropagation();
     const open=colorMenu.classList.toggle('open');
@@ -986,10 +1001,11 @@
       const c=cell.dataset.color;
       // Aplica cor de texto na seleção.
       editor.focus();
-      try{ document.execCommand('foreColor',false,c); }catch(e){}
-      colorBar.style.background=c;
-      colorMenu.querySelectorAll('.color-cell').forEach(x=>x.classList.remove('active'));
-      cell.classList.add('active');
+      try{
+        document.execCommand('styleWithCSS',false,true);
+        document.execCommand('foreColor',false,c);
+      }catch(e){}
+      applyToolbarTextColor(c);
       colorMenu.classList.remove('open');
       colorBtn.setAttribute('aria-expanded',false);
       markSaved();
@@ -1026,6 +1042,7 @@
   const saveText=$('save-text');
   let saveTimer=null, dirty=false;
   let lastSavedAt=editor.dataset.updatedAt?new Date(editor.dataset.updatedAt):null;
+  function formattingPayload(){return {fontFamily,fontSize,textColor:selectedTextColor}}
   function updateWordCount(){
     const words=editor.textContent.trim().match(/\S+/gu)||[];
     $('word-count').textContent=`${words.length} ${words.length===1?'palavra':'palavras'}`;
@@ -1047,7 +1064,7 @@
     saveText.textContent='Salvando...';
     clearTimeout(saveTimer);
     saveTimer=setTimeout(async ()=>{
-        const payload={title:$('title-input').value,tag:$('tag-input').value,content:editor.innerHTML,folder:folderSelect.value};
+        const payload={title:$('title-input').value,tag:$('tag-input').value,content:editor.innerHTML,folder:folderSelect.value,formatting:formattingPayload()};
         try{
           const noteId=editor.dataset.noteId;
           const response=await fetch(noteId?'/api/notes/'+noteId+'/':'/api/notes/',{method:noteId?'PATCH':'POST',headers:{'Content-Type':'application/json','X-CSRFToken':document.cookie.split('; ').find(row=>row.startsWith('csrftoken='))?.split('=')[1]||''},body:JSON.stringify(payload)});
@@ -1065,6 +1082,20 @@
   $('title-input').addEventListener('input',markSaved);
   $('tag-input').addEventListener('input',markSaved);
   folderSelect.addEventListener('change',markSaved);
+  window.addEventListener('pagehide',()=>{
+    if(!dirty)return;
+    clearTimeout(saveTimer);
+    const noteId=editor.dataset.noteId;
+    const payload={title:$('title-input').value,tag:$('tag-input').value,content:editor.innerHTML,folder:folderSelect.value,formatting:formattingPayload()};
+    fetch(noteId?'/api/notes/'+noteId+'/':'/api/notes/',{
+      method:noteId?'PATCH':'POST',keepalive:true,
+      headers:{'Content-Type':'application/json','X-CSRFToken':document.cookie.split('; ').find(row=>row.startsWith('csrftoken='))?.split('=')[1]||''},
+      body:JSON.stringify(payload)
+    });
+  });
+  applyFontFamily(fontFamily);
+  applyToolbarTextColor(selectedTextColor);
+  applyFontSize();
   updateWordCount();
   updateSavedAt();
   setInterval(updateSavedAt,60000);
@@ -1084,8 +1115,6 @@
     }
   });
 
-  /* ===== Aplica fonte inicial ===== */
-  editor.style.fontFamily='Arial,Helvetica,sans-serif';
 </script>
 </body>
 </html>

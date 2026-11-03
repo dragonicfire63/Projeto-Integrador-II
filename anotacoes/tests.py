@@ -248,6 +248,37 @@ class BackendFlowTests(TestCase):
         self.assertEqual(note.folder, "")
         self.assertEqual(note.title, "Rascunho atualizado")
 
+    def test_editor_formatting_is_saved_and_restored_with_safe_text_color(self):
+        self.client.force_login(self.user)
+        response = self.client.post("/api/notes/", data=json.dumps({
+            "title": "Nota formatada",
+            "content": '<p><span style="color: rgb(255, 0, 0);">Vermelho</span><span style="color:#000;position:fixed">Sem estilo perigoso</span></p>',
+            "formatting": {
+                "fontFamily": "'Poppins',sans-serif", "fontSize": 18, "textColor": "#E11D48",
+            },
+        }), content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+        note_id = response.json()["note"]["id"]
+        self.assertEqual(response.json()["note"]["formatting"], {
+            "fontFamily": "'Poppins',sans-serif", "fontSize": 18, "textColor": "#E11D48",
+        })
+
+        updated = self.client.patch(f"/api/notes/{note_id}/", data=json.dumps({
+            "formatting": {
+                "fontFamily": "Georgia,'Times New Roman',serif", "fontSize": 24, "textColor": "#fff",
+            },
+        }), content_type="application/json")
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(updated.json()["note"]["formatting"], {
+            "fontFamily": "Georgia,'Times New Roman',serif", "fontSize": 24, "textColor": "#FFFFFF",
+        })
+
+        editor_page = self.client.get(f"/editor_nota.html?id={note_id}")
+        self.assertEqual(editor_page.status_code, 200)
+        self.assertEqual(editor_page.context["note_formatting"], updated.json()["note"]["formatting"])
+        self.assertIn('style="color: rgb(255, 0, 0);"', editor_page.context["note"].content)
+        self.assertNotIn("position:fixed", editor_page.context["note"].content)
+
     def test_note_can_move_between_folders_and_become_unfiled(self):
         self.client.force_login(self.user)
         other_folder = Folder.objects.create(user=self.user, name="Pessoal", slug="pessoal", tag="PESSOAL")
@@ -636,6 +667,22 @@ class BackendFlowTests(TestCase):
         response = self.client.get("/notas.html")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["notes_json"][self.folder.slug][0]["tag"], "FOTOSSINTESE")
+
+    def test_folder_note_preview_strips_formatting_tags_and_decodes_entities(self):
+        self.client.force_login(self.user)
+        Note.objects.create(
+            user=self.user, folder=self.folder.slug, title="Mitose e meiose",
+            content="<p><b>Mitose</b>&nbsp;e <i>meiose</i> são processos.</p>",
+        )
+
+        for path in ("/notas.html", "/calendario.html", "/postits.html"):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 200)
+                preview = response.context["notes_json"][self.folder.slug][0]["e"]
+                self.assertEqual(preview, "Mitose e meiose são processos.")
+                self.assertNotIn("<b>", preview)
+                self.assertNotIn("&nbsp;", preview)
 
     def test_note_display_preferences_are_saved_and_sent_to_notes_page(self):
         self.client.force_login(self.user)
